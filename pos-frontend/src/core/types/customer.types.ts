@@ -1,12 +1,11 @@
-// ES: Tipos para clientes y estado de crédito
-// EN: Types for customers and credit status
+// ES: Tipos del dominio de clientes / EN: Customer domain types
 
-export type CreditStatus = 'APPROVED' | 'REJECTED' | 'PENDING';
+export type CreditStatus = 'APPROVED' | 'REJECTED' | 'PENDING'
 
 export interface Customer {
-  id: string;
-  fullName: string;
-  documentType: string;
-  documentNumber: string;
-  creditStatus: CreditStatus;
+  id: string
+  fullName: string
+  documentType: string
+  documentNumber: string
+  creditStatus: CreditStatus
 }

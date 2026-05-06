@@ -1,27 +1,24 @@
-// ES: Hook de autenticación — expone estado de sesión y función logout
-// EN: Authentication hook — exposes session state and logout function
+// ES: Hook de autenticación del cajero / EN: Cashier authentication hook
 
-import { useNavigate } from 'react-router-dom';
-import { useSessionStore } from '../../infrastructure/store/sessionStore';
-import { useSaleStore } from '../../infrastructure/store/saleStore';
+import { useNavigate } from 'react-router-dom'
+import { useSessionStore } from '../../infrastructure/store/sessionStore'
+import { useSaleStore } from '../../infrastructure/store/saleStore'
 
 export function useAuth() {
-  const { cashierId, terminalId, isAuthenticated, logout } = useSessionStore();
-  const { clearSale } = useSaleStore();
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+  const { cashierId, terminalId, isAuthenticated, login, logout } = useSessionStore()
+  const { clearSale } = useSaleStore()
 
-  // ES: Cierra sesión, limpia el estado y redirige al login
-  // EN: Logs out, clears state, and redirects to login
+  const handleLogin = (cashierId: string, terminalId: string) => {
+    login(cashierId, terminalId)
+    navigate('/sale')
+  }
+
   const handleLogout = () => {
-    clearSale();
-    logout();
-    navigate('/login');
-  };
+    clearSale()
+    logout()
+    navigate('/login')
+  }
 
-  return {
-    cashierId,
-    terminalId,
-    isAuthenticated,
-    logout: handleLogout,
-  };
+  return { cashierId, terminalId, isAuthenticated, handleLogin, handleLogout }
 }

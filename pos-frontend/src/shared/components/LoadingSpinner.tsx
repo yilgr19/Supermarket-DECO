@@ -1,34 +1,22 @@
-// ES: Spinner de carga accesible
-// EN: Accessible loading spinner
+// ES: Spinner de carga accesible / EN: Accessible loading spinner
 
 interface LoadingSpinnerProps {
-  label?: string;
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
+  label?: string
+  size?: 'sm' | 'md' | 'lg'
 }
 
-export default function LoadingSpinner({
+const sizeClasses = { sm: 'h-4 w-4', md: 'h-8 w-8', lg: 'h-12 w-12' }
+
+export function LoadingSpinner({
   label = 'Cargando... / Loading...',
   size = 'md',
-  className = '',
 }: LoadingSpinnerProps) {
-  const sizeClasses = {
-    sm: 'w-4 h-4 border-2',
-    md: 'w-8 h-8 border-3',
-    lg: 'w-12 h-12 border-4',
-  };
-
   return (
-    <div
-      role="status"
-      aria-label={label}
-      className={`flex items-center justify-center ${className}`}
-    >
+    <div className="flex items-center justify-center" role="status" aria-label={label}>
       <div
-        className={`${sizeClasses[size]} border-blue-600 border-t-transparent rounded-full animate-spin`}
-        aria-hidden="true"
+        className={`${sizeClasses[size]} animate-spin rounded-full border-4 border-blue-200 border-t-blue-600`}
       />
       <span className="sr-only">{label}</span>
     </div>
-  );
+  )
 }

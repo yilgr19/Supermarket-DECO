@@ -11,7 +11,7 @@
 
 ---
 
-- [-] 1. Bootstrap del proyecto / Project bootstrap
+- [ ] 1. Bootstrap del proyecto / Project bootstrap
   - [ ] 1.1 Crear proyecto Vite + React + TypeScript: `npm create vite@latest pos-frontend -- --template react-ts`
   - [ ] 1.2 Instalar dependencias: `react-router-dom`, `zustand`, `axios`, `@zxing/browser`, `tailwindcss`, `@radix-ui/react-dialog`, `@radix-ui/react-label`, `lucide-react`
   - [ ] 1.3 Instalar dependencias de desarrollo: `vitest`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/user-event`, `msw`, `playwright`, `eslint`, `prettier`

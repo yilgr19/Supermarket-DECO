@@ -1,11 +1,10 @@
-// ES: Tipos para productos del catálogo
-// EN: Types for catalog products
+// ES: Tipos del dominio de productos / EN: Product domain types
 
 export interface Product {
-  id: string;
-  name: string;
-  barcode: string;
-  unitPrice: number;
-  availableStock: number;
-  category: string;
+  id: string
+  name: string
+  barcode: string
+  unitPrice: number
+  availableStock: number
+  category: string
 }

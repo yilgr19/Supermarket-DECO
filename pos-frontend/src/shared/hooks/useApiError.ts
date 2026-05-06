@@ -1,23 +1,40 @@
-// ES: Hook para manejo de errores de la API
-// EN: Hook for API error handling
+// ES: Hook para manejo centralizado de errores de API
+// EN: Hook for centralized API error handling
 
-import { useState } from 'react';
-import { ApiError } from '../../infrastructure/http/axiosClient';
+import { useState } from 'react'
+import { ApiError, getErrorMessage } from '../../infrastructure/http/ApiError'
+import type { OutOfStockItem } from '../../core/types/sale.types'
+
+interface ApiErrorState {
+  message: string | null
+  outOfStockItems: OutOfStockItem[] | null
+  status: number | null
+}
 
 export function useApiError() {
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiErrorState>({
+    message: null,
+    outOfStockItems: null,
+    status: null,
+  })
 
   const handleError = (err: unknown) => {
     if (err instanceof ApiError) {
-      setError(err.message);
-    } else if (err instanceof Error) {
-      setError(err.message);
+      setError({
+        message: getErrorMessage(err),
+        outOfStockItems: err.outOfStockItems ?? null,
+        status: err.status,
+      })
     } else {
-      setError('Error desconocido / Unknown error');
+      setError({
+        message: getErrorMessage(err),
+        outOfStockItems: null,
+        status: null,
+      })
     }
-  };
+  }
 
-  const clearError = () => setError(null);
+  const clearError = () => setError({ message: null, outOfStockItems: null, status: null })
 
-  return { error, handleError, clearError };
+  return { error, handleError, clearError }
 }

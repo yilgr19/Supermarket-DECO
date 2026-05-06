@@ -17,7 +17,7 @@ export default function BarcodeScanner({ onProductFound, searchByBarcode, disabl
   const [error, setError] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const codeReaderRef = useRef<{ reset: () => void } | null>(null);
+  const codeReaderRef = useRef<{ reset: () => void; decodeFromVideoDevice: (...args: unknown[]) => Promise<unknown> } | null>(null);
 
   // ES: Limpia el lector de barcode al desmontar
   // EN: Cleans up barcode reader on unmount
@@ -40,7 +40,8 @@ export default function BarcodeScanner({ onProductFound, searchByBarcode, disabl
       // ES: Importación dinámica para evitar errores en entornos sin cámara
       // EN: Dynamic import to avoid errors in environments without camera
       const { BrowserMultiFormatReader } = await import('@zxing/browser');
-      const codeReader = new BrowserMultiFormatReader();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const codeReader = new BrowserMultiFormatReader() as any;
       codeReaderRef.current = codeReader;
 
       if (!videoRef.current) return;

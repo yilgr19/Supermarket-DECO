@@ -1,32 +1,31 @@
-// ES: Componente reutilizable para mostrar mensajes de error
-// EN: Reusable component for displaying error messages
+// ES: Componente reutilizable para mensajes de error
+// EN: Reusable error message component
+
+import { AlertCircle } from 'lucide-react'
 
 interface ErrorMessageProps {
-  message: string;
-  onRetry?: () => void;
-  className?: string;
+  message: string
+  onRetry?: () => void
 }
 
-export default function ErrorMessage({ message, onRetry, className = '' }: ErrorMessageProps) {
+export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
   return (
     <div
       role="alert"
-      className={`flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg ${className}`}
+      className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800"
     >
-      {/* ES: Icono de error / EN: Error icon */}
-      <span className="text-red-500 text-xl flex-shrink-0" aria-hidden="true">⚠️</span>
+      <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
       <div className="flex-1">
-        <p className="text-red-700 text-sm">{message}</p>
+        <p className="text-sm font-medium">{message}</p>
         {onRetry && (
           <button
             onClick={onRetry}
-            className="mt-2 text-sm text-red-600 underline hover:text-red-800 min-h-[44px] px-2"
-            aria-label="Reintentar / Retry"
+            className="mt-2 text-sm font-medium underline hover:no-underline"
           >
             Reintentar / Retry
           </button>
         )}
       </div>
     </div>
-  );
+  )
 }

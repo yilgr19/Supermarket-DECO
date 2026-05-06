@@ -1,9 +1,9 @@
-// ES: Puerto de productos — interfaz de contrato para búsqueda de productos
-// EN: Product port — contract interface for product search
+// ES: Puerto de dominio para búsqueda de productos
+// EN: Domain port for product search
 
-import type { Product } from '../types/product.types';
+import type { Product } from '../types/product.types'
 
 export interface ProductPort {
-  searchByName(name: string): Promise<Product[]>;
-  searchByBarcode(barcode: string): Promise<Product>;
+  searchByName(name: string): Promise<Product[]>
+  searchByBarcode(barcode: string): Promise<Product>
 }
