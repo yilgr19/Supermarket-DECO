@@ -1,175 +1,145 @@
 // ES: Componente de búsqueda y selección de clientes
 // EN: Customer search and selection component
 
-import { useCustomerSearch } from './useCustomerSearch';
-import { useSaleStore } from '../../infrastructure/store/saleStore';
-import StatusBadge from '../../shared/components/StatusBadge';
-import LoadingSpinner from '../../shared/components/LoadingSpinner';
-import ErrorMessage from '../../shared/components/ErrorMessage';
-import type { Customer } from '../../core/types/customer.types';
+import { type KeyboardEvent } from 'react'
+import { UserSearch, UserCheck } from 'lucide-react'
+import { useCustomerSearch } from './useCustomerSearch'
+import { CreditStatusBadge } from '../../shared/components/StatusBadge'
+import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
+import { ErrorMessage } from '../../shared/components/ErrorMessage'
+import type { Customer } from '../../core/types/customer.types'
 
 interface CustomerSearchProps {
-  disabled?: boolean;
+  selectedCustomer: Customer | null
+  onSelectCustomer: (customer: Customer) => void
+  onClearCustomer: () => void
 }
 
-export default function CustomerSearch({ disabled = false }: CustomerSearchProps) {
-  const { query, setQuery, searchMode, setSearchMode, results, isLoading, error } = useCustomerSearch();
-  const { selectedCustomer, setSelectedCustomer } = useSaleStore();
+export function CustomerSearch({
+  selectedCustomer,
+  onSelectCustomer,
+  onClearCustomer,
+}: CustomerSearchProps) {
+  const { query, setQuery, mode, setMode, results, isLoading, error, searchByDocument } =
+    useCustomerSearch()
 
-  const handleSelect = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setQuery('');
-  };
+  const handleDocKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && query.trim()) {
+      searchByDocument(query.trim())
+    }
+  }
 
-  const handleClearCustomer = () => {
-    setSelectedCustomer(null);
-  };
-
-  return (
-    <div className="flex flex-col gap-3">
-      <h3 className="text-sm font-medium text-gray-700">
-        Cliente / Customer
-      </h3>
-
-      {/* ES: Cliente seleccionado / EN: Selected customer */}
-      {selectedCustomer ? (
-        <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <div>
-            <p className="font-medium text-gray-900">{selectedCustomer.fullName}</p>
-            <p className="text-sm text-gray-500">
-              {selectedCustomer.documentType}: {selectedCustomer.documentNumber}
-            </p>
-            <StatusBadge status={selectedCustomer.creditStatus} className="mt-1" />
+  if (selectedCustomer) {
+    return (
+      <div className="rounded-2xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 via-white to-slate-50/80 p-4 shadow-inner shadow-emerald-100/40">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+              <UserCheck className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="font-semibold text-slate-900">{selectedCustomer.fullName}</p>
+              <p className="text-xs text-slate-500">
+                {selectedCustomer.documentType}: {selectedCustomer.documentNumber}
+              </p>
+              <CreditStatusBadge status={selectedCustomer.creditStatus} />
+            </div>
           </div>
           <button
-            onClick={handleClearCustomer}
-            disabled={disabled}
-            className="text-gray-400 hover:text-gray-600 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            onClick={onClearCustomer}
+            className="min-h-[40px] min-w-[40px] rounded-xl text-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
             aria-label="Quitar cliente / Remove customer"
+            type="button"
           >
             ✕
           </button>
         </div>
-      ) : (
-        <>
-          {/* ES: Toggle modo de búsqueda / EN: Search mode toggle */}
-          <div className="flex gap-2" role="group" aria-label="Modo de búsqueda / Search mode">
-            <button
-              type="button"
-              onClick={() => setSearchMode('name')}
-              disabled={disabled}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
-                searchMode === 'name'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              } disabled:opacity-50`}
-              aria-pressed={searchMode === 'name'}
-              aria-label="Buscar por nombre / Search by name"
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex gap-1 rounded-xl border border-slate-200 bg-slate-100/70 p-1">
+        <button
+          type="button"
+          onClick={() => setMode('name')}
+          className={`flex-1 rounded-lg py-2.5 text-xs font-semibold tracking-wide transition ${
+            mode === 'name'
+              ? 'bg-white text-indigo-700 shadow-sm shadow-slate-200/60'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+          aria-pressed={mode === 'name'}
+        >
+          Por nombre
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('document')}
+          className={`flex-1 rounded-lg py-2.5 text-xs font-semibold tracking-wide transition ${
+            mode === 'document'
+              ? 'bg-white text-indigo-700 shadow-sm shadow-slate-200/60'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+          aria-pressed={mode === 'document'}
+        >
+          Por documento
+        </button>
+      </div>
+
+      <div className="relative">
+        <UserSearch
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-400"
+          aria-hidden="true"
+        />
+        <input
+          type={mode === 'document' ? 'text' : 'search'}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={mode === 'document' ? handleDocKeyDown : undefined}
+          placeholder={
+            mode === 'name'
+              ? 'Buscar cliente / Search customer...'
+              : 'Documento ↵ / Document (Enter)'
+          }
+          className="pos-input-search py-2.5 text-sm"
+          aria-label={
+            mode === 'name'
+              ? 'Buscar cliente por nombre / Search customer by name'
+              : 'Buscar cliente por documento / Search customer by document'
+          }
+        />
+      </div>
+
+      {isLoading && <LoadingSpinner size="sm" />}
+      {error && <ErrorMessage message={error} />}
+
+      {results.length > 0 && (
+        <ul className="pos-list max-h-48 overflow-y-auto">
+          {results.map((customer) => (
+            <li
+              key={customer.id}
+              className="flex items-center justify-between gap-2 bg-white px-3 py-2.5 first:rounded-t-xl last:rounded-b-xl hover:bg-violet-50/40"
             >
-              Por Nombre
-            </button>
-            <button
-              type="button"
-              onClick={() => setSearchMode('document')}
-              disabled={disabled}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
-                searchMode === 'document'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              } disabled:opacity-50`}
-              aria-pressed={searchMode === 'document'}
-              aria-label="Buscar por documento / Search by document"
-            >
-              Por Documento
-            </button>
-          </div>
-
-          {/* ES: Campo de búsqueda / EN: Search field */}
-          <div className="relative">
-            <label htmlFor="customer-search" className="sr-only">
-              {searchMode === 'name'
-                ? 'Buscar cliente por nombre / Search customer by name'
-                : 'Buscar cliente por documento / Search customer by document'}
-            </label>
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true">
-              👤
-            </span>
-            <input
-              id="customer-search"
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={
-                searchMode === 'name'
-                  ? 'Nombre del cliente / Customer name'
-                  : 'Número de documento / Document number'
-              }
-              disabled={disabled}
-              aria-label={
-                searchMode === 'name'
-                  ? 'Buscar cliente por nombre / Search customer by name'
-                  : 'Buscar cliente por documento / Search customer by document'
-              }
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            />
-          </div>
-
-          {/* ES: Estado de carga / EN: Loading state */}
-          {isLoading && (
-            <div className="flex items-center gap-2 text-gray-500">
-              <LoadingSpinner size="sm" label="Buscando clientes... / Searching customers..." />
-              <span className="text-sm">Buscando... / Searching...</span>
-            </div>
-          )}
-
-          {/* ES: Error / EN: Error */}
-          {error && !isLoading && <ErrorMessage message={error} />}
-
-          {/* ES: Resultados / EN: Results */}
-          {!isLoading && !error && results.length > 0 && (
-            <ul
-              className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-48 overflow-y-auto"
-              aria-label="Resultados de clientes / Customer results"
-            >
-              {results.map((customer) => (
-                <li key={customer.id} className="p-3 hover:bg-gray-50">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{customer.fullName}</p>
-                      <p className="text-sm text-gray-500">
-                        {customer.documentType}: {customer.documentNumber}
-                      </p>
-                      <StatusBadge status={customer.creditStatus} className="mt-1" />
-                    </div>
-                    <button
-                      onClick={() => handleSelect(customer)}
-                      disabled={disabled}
-                      className="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] min-w-[44px]"
-                      aria-label={`Seleccionar cliente ${customer.fullName} / Select customer ${customer.fullName}`}
-                    >
-                      Seleccionar
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {/* ES: Sin resultados / EN: No results */}
-          {!isLoading && !error && query.length >= 2 && results.length === 0 && (
-            <p className="text-gray-500 text-sm text-center py-2" role="status">
-              No se encontraron clientes / No customers found
-            </p>
-          )}
-
-          {/* ES: Sin cliente seleccionado / EN: No customer selected */}
-          {!query && (
-            <p className="text-gray-400 text-xs text-center">
-              Sin cliente / No customer (opcional para efectivo / optional for cash)
-            </p>
-          )}
-        </>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-slate-900">{customer.fullName}</p>
+                <p className="text-xs text-slate-500">
+                  {customer.documentType}: {customer.documentNumber}
+                </p>
+                <CreditStatusBadge status={customer.creditStatus} />
+              </div>
+              <button
+                type="button"
+                onClick={() => onSelectCustomer(customer)}
+                className="min-h-[40px] rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 px-3 text-xs font-bold uppercase tracking-wide text-white shadow-md shadow-indigo-500/25 transition hover:from-indigo-500 hover:to-violet-500"
+                aria-label={`Seleccionar ${customer.fullName} / Select ${customer.fullName}`}
+              >
+                OK
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
-  );
+  )
 }

@@ -1,109 +1,82 @@
-// ES: Página de recibo — carga y muestra el recibo tras el checkout
-// EN: Receipt page — loads and displays the receipt after checkout
+// ES: Página de recibo tras checkout exitoso
+// EN: Receipt page after successful checkout
 
-import { useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useReceipt } from './useReceipt';
-import { useSaleStore } from '../../infrastructure/store/saleStore';
-import ReceiptView from './ReceiptView';
-import LoadingSpinner from '../../shared/components/LoadingSpinner';
-import ErrorMessage from '../../shared/components/ErrorMessage';
+import { useParams, useNavigate } from 'react-router-dom'
+import { Printer, ShoppingCart, RotateCcw } from 'lucide-react'
+import { useReceipt } from './useReceipt'
+import { ReceiptView } from './ReceiptView'
+import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
+import { ErrorMessage } from '../../shared/components/ErrorMessage'
 
-export default function ReceiptPage() {
-  const { transactionId } = useParams<{ transactionId: string }>();
-  const { receipt, isLoading, error, getReceipt } = useReceipt();
-  const { clearSale } = useSaleStore();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (transactionId) {
-      getReceipt(transactionId);
-    }
-  }, [transactionId, getReceipt]);
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleNewSale = () => {
-    clearSale();
-    navigate('/sale');
-  };
-
-  const handleReturn = () => {
-    if (receipt) {
-      navigate(`/sale/${receipt.saleId}/return`);
-    }
-  };
+export function ReceiptPage() {
+  const { transactionId } = useParams<{ transactionId: string }>()
+  const navigate = useNavigate()
+  const { receipt, isLoading, error } = useReceipt(transactionId)
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" label="Cargando recibo... / Loading receipt..." />
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <LoadingSpinner label="Cargando recibo..." size="lg" />
+        <p className="text-sm text-slate-500">Preparando ticket…</p>
       </div>
-    );
+    )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
-          <ErrorMessage message={error} onRetry={() => transactionId && getReceipt(transactionId)} />
-          <button
-            onClick={handleNewSale}
-            className="mt-4 w-full py-3 bg-blue-600 text-white rounded-lg font-medium min-h-[44px]"
-            aria-label="Nueva venta / New sale"
-          >
-            Nueva Venta / New Sale
-          </button>
+      <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-6">
+        <div className="pos-card border-red-100/80">
+          <ErrorMessage message={error} />
         </div>
+        <button
+          type="button"
+          onClick={() => navigate('/sale')}
+          className="pos-btn-primary mt-6 w-full"
+        >
+          Nueva venta / New Sale
+        </button>
       </div>
-    );
+    )
   }
 
-  if (!receipt) return null;
-
-  const isReturn = receipt.receiptType === 'FULL_RETURN' || receipt.receiptType === 'PARTIAL_RETURN';
-  const isCompleted = !isReturn;
+  if (!receipt) return null
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-md mx-auto">
-        {/* ES: Vista del recibo / EN: Receipt view */}
+    <div className="min-h-screen bg-gradient-to-b from-slate-100/80 via-slate-50 to-white py-10">
+      <div className="mx-auto max-w-md px-4">
         <ReceiptView receipt={receipt} />
 
-        {/* ES: Botones de acción / EN: Action buttons */}
-        <div className="mt-6 space-y-3 print:hidden">
-          {/* ES: Botón imprimir / EN: Print button */}
+        <div className="mt-8 flex flex-col gap-3">
           <button
-            onClick={handlePrint}
-            className="w-full py-4 bg-gray-800 hover:bg-gray-900 text-white rounded-xl font-bold text-lg transition-colors min-h-[44px]"
-            aria-label="Imprimir recibo / Print receipt"
+            type="button"
+            onClick={() => window.print()}
+            className="pos-btn-secondary w-full gap-2"
           >
-            🖨️ Imprimir / Print
+            <Printer className="h-4 w-4" aria-hidden />
+            Imprimir / Print
           </button>
 
-          {/* ES: Botón nueva venta / EN: New sale button */}
-          <button
-            onClick={handleNewSale}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg transition-colors min-h-[44px]"
-            aria-label="Nueva venta / New sale"
-          >
-            ➕ Nueva Venta / New Sale
-          </button>
-
-          {/* ES: Botón devolución (solo para ventas completadas) / EN: Return button (only for completed sales) */}
-          {isCompleted && (
+          {receipt.receiptType === 'SALE' && (
             <button
-              onClick={handleReturn}
-              className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-lg transition-colors min-h-[44px]"
-              aria-label="Procesar devolución / Process return"
+              type="button"
+              onClick={() => navigate(`/sale/${receipt.saleId}/return`)}
+              className="pos-btn-secondary w-full gap-2 border-orange-200 bg-orange-50/90 text-orange-900 hover:bg-orange-100"
             >
-              ↩️ Procesar Devolución / Process Return
+              <RotateCcw className="h-4 w-4" aria-hidden />
+              Devolución / Return
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={() => navigate('/sale')}
+            className="pos-btn-primary w-full gap-2"
+          >
+            <ShoppingCart className="h-4 w-4" aria-hidden />
+            Nueva venta / New Sale
+          </button>
         </div>
       </div>
     </div>
-  );
+  )
 }

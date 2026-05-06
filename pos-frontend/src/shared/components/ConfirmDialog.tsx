@@ -1,74 +1,67 @@
-// ES: Diálogo de confirmación reutilizable / EN: Reusable confirmation dialog
+// ES: Diálogo de confirmación (Radix AlertDialog + estilos Tailwind)
+// EN: Confirmation dialog (Radix AlertDialog + Tailwind)
 
-import { X } from 'lucide-react'
+import * as AlertDialog from '@radix-ui/react-alert-dialog'
 
-interface ConfirmDialogProps {
-  isOpen: boolean
+export interface ConfirmDialogProps {
+  open: boolean
+  onOpenChange?: (open: boolean) => void
   title: string
-  message: string
-  confirmLabel?: string
+  description?: string
   cancelLabel?: string
+  confirmLabel?: string
   onConfirm: () => void
-  onCancel: () => void
-  isLoading?: boolean
-  variant?: 'danger' | 'default'
+  /** ES: Deshabilitar acciones mientras se procesa EN: Disable while pending */
+  pending?: boolean
 }
 
 export function ConfirmDialog({
-  isOpen,
+  open,
+  onOpenChange,
   title,
-  message,
-  confirmLabel = 'Confirmar / Confirm',
-  cancelLabel = 'Cancelar / Cancel',
+  description,
+  cancelLabel = 'Cancelar',
+  confirmLabel = 'Confirmar',
   onConfirm,
-  onCancel,
-  isLoading = false,
-  variant = 'default',
+  pending = false,
 }: ConfirmDialogProps) {
-  if (!isOpen) return null
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="dialog-title"
-    >
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-        <div className="flex items-start justify-between">
-          <h2 id="dialog-title" className="text-lg font-semibold text-gray-900">
+    <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
+      <AlertDialog.Portal>
+        <AlertDialog.Overlay className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-[2px] data-[state=closed]:animate-none" />
+        <AlertDialog.Content className="fixed left-1/2 top-1/2 z-[60] w-[min(420px,calc(100%-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200/90 bg-white p-6 shadow-pos-lg focus:outline-none">
+          <AlertDialog.Title className="text-lg font-bold tracking-tight text-slate-900">
             {title}
-          </h2>
-          <button
-            onClick={onCancel}
-            className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            aria-label="Cerrar / Close"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <p className="mt-2 text-sm text-gray-600">{message}</p>
-        <div className="mt-6 flex gap-3 justify-end">
-          <button
-            onClick={onCancel}
-            disabled={isLoading}
-            className="min-h-[44px] rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-          >
-            {cancelLabel}
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={isLoading}
-            className={`min-h-[44px] rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${
-              variant === 'danger'
-                ? 'bg-red-600 hover:bg-red-700'
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-          >
-            {isLoading ? 'Procesando...' : confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
+          </AlertDialog.Title>
+          {description && (
+            <AlertDialog.Description className="mt-2 text-sm leading-relaxed text-slate-600">
+              {description}
+            </AlertDialog.Description>
+          )}
+          <div className="mt-6 flex flex-wrap justify-end gap-3">
+            <AlertDialog.Cancel asChild>
+              <button
+                type="button"
+                disabled={pending}
+                className="pos-btn-secondary min-h-[44px] px-5 disabled:opacity-50"
+              >
+                {cancelLabel}
+              </button>
+            </AlertDialog.Cancel>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => {
+                if (!pending) onConfirm()
+                onOpenChange?.(false)
+              }}
+              className="min-h-[44px] rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-5 text-sm font-bold text-white shadow-md shadow-red-500/20 transition hover:from-red-500 hover:to-rose-500 disabled:opacity-50"
+            >
+              {confirmLabel}
+            </button>
+          </div>
+        </AlertDialog.Content>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
   )
 }

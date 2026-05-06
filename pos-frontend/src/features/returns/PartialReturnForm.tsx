@@ -1,156 +1,83 @@
-// ES: Formulario de devolución parcial con selección de ítems
-// EN: Partial return form with item selection
+// ES: Devolución parcial por líneas EN: Partial return lines
 
-import React, { useState } from 'react';
-import type { Sale } from '../../core/types/sale.types';
-import type { ReturnItemRequest } from '../../core/types/sale.types';
-import ErrorMessage from '../../shared/components/ErrorMessage';
+import type { SaleItem } from '../../core/types/sale.types'
 
-// ES: Formatea precio en pesos colombianos
-// EN: Formats price in Colombian pesos
-function formatCOP(amount: number): string {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    minimumFractionDigits: 0,
-  }).format(amount);
-}
-
-interface ReturnItemState {
-  saleItemId: string;
-  quantity: number;
-  reason: string;
-  maxQuantity: number;
-  productName: string;
+export type PartialReturnLineState = {
+  item: SaleItem
+  returnQty: number
+  reason: string
 }
 
 interface PartialReturnFormProps {
-  sale: Sale;
-  onConfirm: (items: ReturnItemRequest[]) => Promise<void>;
-  isLoading?: boolean;
-  error?: string | null;
+  lines: PartialReturnLineState[]
+  onQuantityChange: (index: number, quantity: number) => void
+  onReasonChange: (index: number, reason: string) => void
+  onSubmit: () => void
+  isLoading: boolean
 }
 
-export default function PartialReturnForm({ sale, onConfirm, isLoading = false, error }: PartialReturnFormProps) {
-  const [returnItems, setReturnItems] = useState<ReturnItemState[]>(
-    sale.items.map((item) => ({
-      saleItemId: item.id,
-      quantity: 0,
-      reason: '',
-      maxQuantity: item.quantity,
-      productName: item.productName,
-    }))
-  );
-  const [validationError, setValidationError] = useState<string | null>(null);
+export function PartialReturnForm({
+  lines,
+  onQuantityChange,
+  onReasonChange,
+  onSubmit,
+  isLoading,
+}: PartialReturnFormProps) {
+  const hasAnyQty = lines.some((l) => l.returnQty > 0)
 
-  const updateItem = (index: number, field: 'quantity' | 'reason', value: string | number) => {
-    setReturnItems((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
-      return updated;
-    });
-    setValidationError(null);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const itemsToReturn = returnItems.filter((item) => item.quantity > 0);
-
-    if (itemsToReturn.length === 0) {
-      setValidationError('Seleccione al menos un ítem para devolver / Select at least one item to return');
-      return;
-    }
-
-    // ES: Validar que ítems con cantidad > 0 tengan motivo
-    // EN: Validate that items with quantity > 0 have a reason
-    const missingReason = itemsToReturn.find((item) => !item.reason.trim());
-    if (missingReason) {
-      setValidationError(`Ingrese el motivo para "${missingReason.productName}" / Enter reason for "${missingReason.productName}"`);
-      return;
-    }
-
-    setValidationError(null);
-    const requests: ReturnItemRequest[] = itemsToReturn.map((item) => ({
-      saleItemId: item.saleItemId,
-      quantity: item.quantity,
-      reason: item.reason.trim(),
-    }));
-
-    await onConfirm(requests);
-  };
+  const fmt = (n: number) => `$${n.toLocaleString('es-CO')}`
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* ES: Lista de ítems / EN: Items list */}
-      <div className="space-y-3">
-        {returnItems.map((returnItem, index) => {
-          const saleItem = sale.items[index];
-          return (
-            <div key={returnItem.saleItemId} className="border border-gray-200 rounded-lg p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p className="font-medium text-gray-900">{returnItem.productName}</p>
-                  <p className="text-sm text-gray-500">
-                    Comprado / Purchased: {returnItem.maxQuantity} — {formatCOP(saleItem.lineTotal)}
-                  </p>
-                </div>
+    <div className="flex flex-col gap-5">
+      <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-inner">
+        {lines.map((pi, idx) => (
+          <li key={pi.item.id} className="p-4 hover:bg-orange-50/20">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-semibold text-slate-900">{pi.item.productName}</p>
+                <p className="text-xs text-slate-500">
+                  Comprado {pi.item.quantity} · {fmt(pi.item.unitPrice)} c/u
+                </p>
               </div>
-
-              {/* ES: Cantidad a devolver / EN: Quantity to return */}
-              <div className="flex gap-3 items-center mb-3">
-                <label htmlFor={`return-qty-${returnItem.saleItemId}`} className="text-sm text-gray-600 min-w-[120px]">
-                  Cantidad a devolver / Return qty:
+              <div className="flex items-center gap-2">
+                <label htmlFor={`qty-${idx}`} className="text-xs font-medium text-slate-500">
+                  Cantidad / Qty
                 </label>
                 <input
-                  id={`return-qty-${returnItem.saleItemId}`}
+                  id={`qty-${idx}`}
                   type="number"
-                  min="0"
-                  max={returnItem.maxQuantity}
-                  value={returnItem.quantity}
-                  onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value, 10) || 0)}
-                  disabled={isLoading}
-                  aria-label={`Cantidad a devolver de ${returnItem.productName} / Return quantity for ${returnItem.productName}`}
-                  className="w-20 px-2 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-100 min-h-[44px]"
+                  min={0}
+                  max={pi.item.quantity}
+                  value={pi.returnQty}
+                  onChange={(e) => {
+                    const val = Math.min(parseInt(e.target.value, 10) || 0, pi.item.quantity)
+                    onQuantityChange(idx, val)
+                  }}
+                  className="w-[4rem] rounded-xl border border-slate-200 bg-slate-50 px-2 py-2 text-center text-sm tabular-nums focus:border-orange-400 focus:outline-none focus:ring-4 focus:ring-orange-500/15"
                 />
-                <span className="text-sm text-gray-400">/ {returnItem.maxQuantity}</span>
               </div>
-
-              {/* ES: Motivo por ítem / EN: Per-item reason */}
-              {returnItem.quantity > 0 && (
-                <div>
-                  <label htmlFor={`return-reason-${returnItem.saleItemId}`} className="block text-sm text-gray-600 mb-1">
-                    Motivo / Reason <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id={`return-reason-${returnItem.saleItemId}`}
-                    type="text"
-                    value={returnItem.reason}
-                    onChange={(e) => updateItem(index, 'reason', e.target.value)}
-                    placeholder="Motivo de devolución / Return reason"
-                    disabled={isLoading}
-                    aria-label={`Motivo de devolución para ${returnItem.productName} / Return reason for ${returnItem.productName}`}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-100 min-h-[44px]"
-                  />
-                </div>
-              )}
             </div>
-          );
-        })}
-      </div>
-
-      {validationError && <ErrorMessage message={validationError} />}
-      {error && <ErrorMessage message={error} />}
-
-      {/* ES: Botón confirmar / EN: Confirm button */}
+            {pi.returnQty > 0 && (
+              <input
+                type="text"
+                value={pi.reason}
+                onChange={(e) => onReasonChange(idx, e.target.value)}
+                placeholder="Motivo por ítem / Reason"
+                className="pos-input text-sm"
+                aria-label={`Motivo de devolución para ${pi.item.productName}`}
+              />
+            )}
+          </li>
+        ))}
+      </ul>
       <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-lg transition-colors min-h-[44px] disabled:opacity-50"
-        aria-label="Confirmar devolución parcial / Confirm partial return"
+        type="button"
+        onClick={onSubmit}
+        disabled={isLoading || !hasAnyQty}
+        className="min-h-[48px] rounded-xl bg-gradient-to-r from-orange-600 to-red-600 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition hover:from-orange-500 hover:to-red-500 disabled:pointer-events-none disabled:opacity-40"
       >
-        {isLoading ? 'Procesando...' : '↩️ Confirmar Devolución Parcial / Confirm Partial Return'}
+        {isLoading ? 'Procesando…' : 'Confirmar devolución parcial'}
       </button>
-    </form>
-  );
+    </div>
+  )
 }

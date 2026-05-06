@@ -19,14 +19,25 @@ export class ApiError extends Error {
 export function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     switch (error.status) {
+      case 0:
+        return 'Sin conexión, verifique su red / No connection, check your network'
       case 503:
         return 'Servicio no disponible, intente de nuevo / Service unavailable, please try again'
       case 404:
-        return 'Recurso no encontrado / Resource not found'
+        return 'No encontrado / Not found'
+      case 409:
+        return (
+          error.message?.trim() ||
+          'Sin stock suficiente en una o más líneas / Insufficient stock on one or more lines'
+        )
+      case 422:
+        return (
+          error.message?.trim() || 'Operación no permitida por el servidor / Operation not allowed'
+        )
       case 400:
-        return 'Datos inválidos / Invalid data'
+        return error.message?.trim() || 'Datos inválidos / Invalid data'
       default:
-        return error.message || 'Error desconocido / Unknown error'
+        return error.message?.trim() || 'Error desconocido / Unknown error'
     }
   }
   if (error instanceof Error) {

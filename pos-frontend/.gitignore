@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# TypeScript incremental
+*.tsbuildinfo
+
+# Env local (el ejemplo se versiona)
+.env
+.env.*.local
+
+# Playwright / cobertura
+playwright-report/
+test-results/
+coverage/

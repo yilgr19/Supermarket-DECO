@@ -1,151 +1,142 @@
 // ES: Vista del recibo de venta o devolución
 // EN: Sale or return receipt view
 
-import type { Receipt } from '../../core/types/receipt.types';
-
-// ES: Formatea precio en pesos colombianos
-// EN: Formats price in Colombian pesos
-function formatCOP(amount: number): string {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    minimumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDate(dateStr: string): string {
-  return new Intl.DateTimeFormat('es-CO', {
-    dateStyle: 'long',
-    timeStyle: 'medium',
-  }).format(new Date(dateStr));
-}
+import type { Receipt } from '../../core/types/receipt.types'
 
 interface ReceiptViewProps {
-  receipt: Receipt;
+  receipt: Receipt
 }
 
-export default function ReceiptView({ receipt }: ReceiptViewProps) {
-  const isReturn = receipt.receiptType === 'FULL_RETURN' || receipt.receiptType === 'PARTIAL_RETURN';
-  const isCreditSale = receipt.paymentType === 'CREDIT';
+const fmt = (n: number) => `$${n.toLocaleString('es-CO', { minimumFractionDigits: 0 })}`
+
+export function ReceiptView({ receipt }: ReceiptViewProps) {
+  const isReturn = receipt.receiptType !== 'SALE'
+  const isCreditMemo = isReturn && receipt.paymentType === 'CREDIT'
+  const storeName = import.meta.env.VITE_STORE_NAME || 'Supermercado POS'
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 max-w-md mx-auto font-mono text-sm">
-      {/* ES: Encabezado del recibo / EN: Receipt header */}
-      <div className="text-center mb-4 border-b border-dashed border-gray-300 pb-4">
-        <h1 className="text-xl font-bold text-gray-900">
-          {receipt.storeName || import.meta.env.VITE_STORE_NAME || 'Supermercado POS'}
+    <div className="receipt-print mx-auto max-w-sm overflow-hidden rounded-3xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/95 p-7 font-mono text-sm shadow-pos-lg print:border-none print:shadow-none">
+      <div className="relative mb-6 text-center">
+        <div
+          className="pointer-events-none absolute -top-14 left-1/2 h-24 w-24 -translate-x-1/2 rounded-full bg-violet-400/15 blur-2xl"
+          aria-hidden
+        />
+        <p className="text-[0.6rem] font-bold uppercase tracking-[0.35em] text-violet-500">
+          Ticket
+        </p>
+        <h1 className="mt-2 bg-gradient-to-r from-violet-700 via-indigo-700 to-violet-700 bg-clip-text text-lg font-black uppercase tracking-wide text-transparent">
+          {storeName}
         </h1>
-        {isReturn && (
-          <div className="mt-2 bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-medium inline-block">
-            {receipt.receiptType === 'FULL_RETURN' ? '↩ DEVOLUCIÓN TOTAL / FULL RETURN' : '↩ DEVOLUCIÓN PARCIAL / PARTIAL RETURN'}
+        {isCreditMemo ? (
+          <div className="mt-4 inline-flex rounded-full bg-indigo-600 px-4 py-1.5 text-[0.65rem] font-bold uppercase tracking-wide text-white shadow-md shadow-indigo-500/25">
+            Nota de crédito / Credit note
           </div>
+        ) : (
+          isReturn && (
+            <div className="mt-4 inline-flex rounded-full bg-orange-500 px-4 py-1.5 text-[0.65rem] font-bold uppercase tracking-wide text-white shadow-md shadow-orange-500/25">
+              {receipt.receiptType === 'FULL_RETURN'
+                ? 'Devolución total / Full return'
+                : 'Devolución parcial / Partial'}
+            </div>
+          )
         )}
-        <p className="text-gray-500 mt-2">Terminal: {receipt.terminalId}</p>
-        <p className="text-gray-500">Cajero / Cashier: {receipt.cashierId}</p>
-        <p className="text-gray-500">{formatDate(receipt.createdAt)}</p>
-        {receipt.customerName && (
-          <p className="text-gray-700 font-medium mt-1">Cliente / Customer: {receipt.customerName}</p>
-        )}
-      </div>
-
-      {/* ES: Líneas de productos / EN: Product lines */}
-      <div className="mb-4 border-b border-dashed border-gray-300 pb-4">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="text-gray-500">
-              <th className="text-left">Producto / Product</th>
-              <th className="text-center">Cant</th>
-              <th className="text-right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {receipt.items.map((item, index) => (
-              <tr key={index} className="border-t border-gray-100">
-                <td className="py-1">
-                  <p>{item.productName}</p>
-                  <p className="text-gray-400">{formatCOP(item.unitPrice)} c/u</p>
-                </td>
-                <td className="text-center py-1">x{item.quantity}</td>
-                <td className="text-right py-1 font-medium">{formatCOP(item.lineTotal)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* ES: Totales / EN: Totals */}
-      <div className="mb-4 border-b border-dashed border-gray-300 pb-4 space-y-1">
-        <div className="flex justify-between">
-          <span className="text-gray-500">Subtotal:</span>
-          <span>{formatCOP(receipt.subtotal)}</span>
+        <div className="mt-5 space-y-1 text-[0.72rem] text-slate-500">
+          <p>Terminal · {receipt.terminalId}</p>
+          <p>Cajero · {receipt.cashierId}</p>
+          <p>{new Date(receipt.createdAt).toLocaleString('es-CO')}</p>
+          {receipt.customerName && (
+            <p className="text-slate-600">Cliente · {receipt.customerName}</p>
+          )}
         </div>
-        <div className="flex justify-between">
-          <span className="text-gray-500">Impuesto / Tax:</span>
-          <span>{formatCOP(receipt.tax)}</span>
+        {isCreditMemo && (
+          <p className="mx-auto mt-3 max-w-[14rem] text-[0.65rem] leading-relaxed text-slate-500">
+            Ajuste en cuenta cliente — sin reembolso en efectivo / Customer account credit · no cash refund
+          </p>
+        )}
+      </div>
+
+      <div className="mb-6 h-px w-full bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+
+      <ul className="mb-6 space-y-2">
+        {receipt.items.map((item, i) => (
+          <li key={i} className="flex justify-between gap-3 border-b border-slate-100/90 pb-2 last:border-0">
+            <span className="min-w-0 flex-1 truncate text-[0.72rem] text-slate-700">
+              <span className="font-semibold text-slate-900">{item.productName}</span>
+              {' ×'}
+              {item.quantity}
+            </span>
+            <span className="shrink-0 text-[0.72rem] font-semibold tabular-nums text-slate-900">
+              {fmt(item.lineTotal)}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+
+      <dl className="mt-5 space-y-2 text-[0.72rem]">
+        <div className="flex justify-between text-slate-500">
+          <dt>Subtotal</dt>
+          <dd className="tabular-nums font-medium text-slate-800">{fmt(receipt.subtotal)}</dd>
+        </div>
+        <div className="flex justify-between text-slate-500">
+          <dt>Iva / Tax</dt>
+          <dd className="tabular-nums font-medium text-slate-800">{fmt(receipt.tax)}</dd>
         </div>
         {receipt.discount > 0 && (
-          <div className="flex justify-between text-green-600">
-            <span>Descuento / Discount:</span>
-            <span>-{formatCOP(receipt.discount)}</span>
+          <div className="flex justify-between text-emerald-700">
+            <dt>Dto. / Discount</dt>
+            <dd className="tabular-nums font-semibold">−{fmt(receipt.discount)}</dd>
           </div>
         )}
-        <div className="flex justify-between font-bold text-base border-t border-gray-200 pt-1 mt-1">
-          <span>TOTAL:</span>
-          <span>{formatCOP(receipt.total)}</span>
+        <div className="flex justify-between pt-4 text-base font-black text-slate-900">
+          <dt>TOTAL</dt>
+          <dd className="tabular-nums">{fmt(receipt.total)}</dd>
         </div>
-      </div>
+      </dl>
 
-      {/* ES: Información de pago / EN: Payment information */}
-      <div className="mb-4 border-b border-dashed border-gray-300 pb-4 space-y-1">
-        <div className="flex justify-between">
-          <span className="text-gray-500">Pago / Payment:</span>
-          <span className="font-medium">
-            {receipt.paymentType === 'CASH' ? '💵 EFECTIVO / CASH' : '💳 CRÉDITO / CREDIT'}
-          </span>
-        </div>
+      <div className="my-6 h-px w-full bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
 
-        {/* ES: Efectivo: monto recibido y vuelto / EN: Cash: amount received and change */}
-        {receipt.paymentType === 'CASH' && receipt.amountReceived !== undefined && (
+      <div className="space-y-2 text-[0.72rem]">
+        <p>
+          <span className="text-slate-500">Pago / Payment · </span>
+          <span className="font-bold text-slate-900">{receipt.paymentType}</span>
+        </p>
+        {receipt.paymentType === 'CASH' && (
           <>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Recibido / Received:</span>
-              <span>{formatCOP(receipt.amountReceived)}</span>
-            </div>
-            <div className="flex justify-between font-medium text-green-700">
-              <span>Vuelto / Change:</span>
-              <span>{formatCOP(receipt.changeAmount || 0)}</span>
-            </div>
+            <p>
+              <span className="text-slate-500">Recibido / Received · </span>
+              <span className="tabular-nums font-medium">{fmt(receipt.amountReceived ?? 0)}</span>
+            </p>
+            <p>
+              <span className="text-slate-500">Vuelto / Change · </span>
+              <span className="tabular-nums font-bold text-emerald-600">{fmt(receipt.changeAmount ?? 0)}</span>
+            </p>
           </>
         )}
-
-        {/* ES: Crédito: referencia / EN: Credit: reference */}
-        {isCreditSale && receipt.creditReference && (
-          <div className="flex justify-between">
-            <span className="text-gray-500">Ref. Crédito / Credit Ref:</span>
-            <span className="font-medium text-blue-700">{receipt.creditReference}</span>
-          </div>
+        {receipt.paymentType === 'CREDIT' && receipt.creditReference && (
+          <p>
+            <span className="text-slate-500">Ref. crédito · </span>
+            <span className="font-semibold">{receipt.creditReference}</span>
+          </p>
         )}
-
-        {/* ES: Devolución a crédito: nota de crédito / EN: Credit return: credit note */}
-        {isReturn && isCreditSale && (
-          <div className="mt-2 p-2 bg-blue-50 rounded text-blue-700 text-xs">
-            📋 Nota de Crédito / Credit Note emitida
-          </div>
+        {isReturn && receipt.originalTransactionId && (
+          <p className="break-all">
+            <span className="text-slate-500">TX original · </span>
+            <span>{receipt.originalTransactionId}</span>
+          </p>
         )}
       </div>
 
-      {/* ES: Referencia a transacción original (devoluciones) / EN: Reference to original transaction (returns) */}
-      {receipt.originalTransactionId && (
-        <div className="mb-4 text-xs text-gray-500">
-          <p>Ref. Original TX: {receipt.originalTransactionId}</p>
-        </div>
-      )}
-
-      {/* ES: ID de transacción / EN: Transaction ID */}
-      <div className="text-center text-xs text-gray-400">
-        <p>TX: {receipt.transactionId}</p>
-        <p className="mt-1">¡Gracias por su compra! / Thank you for your purchase!</p>
+      <div className="mt-8 rounded-2xl bg-slate-900 px-4 py-3 text-center">
+        <p className="text-[0.6rem] font-medium uppercase tracking-widest text-slate-400">Transacción</p>
+        <p className="mt-1 font-mono text-xs font-semibold tracking-wide text-emerald-300">
+          {receipt.transactionId}
+        </p>
       </div>
+      <p className="mt-5 text-center text-[0.65rem] font-medium text-slate-400">
+        Gracias · Thank you!
+      </p>
     </div>
-  );
+  )
 }

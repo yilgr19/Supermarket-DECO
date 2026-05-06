@@ -1,103 +1,61 @@
 // ES: Hook para búsqueda de productos con debounce
 // EN: Hook for product search with debounce
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Product } from '../../core/types/product.types';
-import { productApiAdapter } from '../../adapters/http/productApiAdapter';
-import { ApiError } from '../../infrastructure/http/axiosClient';
+import { useState, useEffect, useCallback } from 'react'
+import { productApiAdapter } from '../../adapters/http/productApiAdapter'
+import type { Product } from '../../core/types/product.types'
+import { getErrorMessage } from '../../infrastructure/http/ApiError'
 
-interface UseProductSearchReturn {
-  query: string;
-  setQuery: (q: string) => void;
-  results: Product[];
-  isLoading: boolean;
-  error: string | null;
-  searchByBarcode: (barcode: string) => Promise<Product | null>;
-  clearResults: () => void;
-}
-
-export function useProductSearch(): UseProductSearchReturn {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+export function useProductSearch() {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // ES: Búsqueda por nombre con debounce de 300ms
   // EN: Name search with 300ms debounce
   useEffect(() => {
     if (query.length < 2) {
-      setResults([]);
-      setError(null);
-      return;
+      setResults([])
+      return
     }
-
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    debounceRef.current = setTimeout(async () => {
-      setIsLoading(true);
-      setError(null);
+    const timer = setTimeout(async () => {
+      setIsLoading(true)
+      setError(null)
       try {
-        const products = await productApiAdapter.searchByName(query);
-        setResults(products);
+        const data = await productApiAdapter.searchByName(query)
+        setResults(data)
       } catch (err) {
-        if (err instanceof ApiError) {
-          setError(err.message);
-        } else {
-          setError('Error al buscar productos / Error searching products');
-        }
-        setResults([]);
+        setError(getErrorMessage(err))
+        setResults([])
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    }, 300);
-
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, [query]);
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [query])
 
   // ES: Búsqueda inmediata por código de barras
-  // EN: Immediate search by barcode
+  // EN: Immediate barcode search
   const searchByBarcode = useCallback(async (barcode: string): Promise<Product | null> => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
     try {
-      const product = await productApiAdapter.searchByBarcode(barcode);
-      return product;
+      const product = await productApiAdapter.searchByBarcode(barcode)
+      return product
     } catch (err) {
-      if (err instanceof ApiError) {
-        if (err.status === 404) {
-          setError(`Producto no encontrado con código: ${barcode} / Product not found with code: ${barcode}`);
-        } else {
-          setError(err.message);
-        }
-      } else {
-        setError('Error al buscar por barcode / Error searching by barcode');
-      }
-      return null;
+      setError(getErrorMessage(err))
+      return null
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, []);
+  }, [])
 
-  const clearResults = useCallback(() => {
-    setResults([]);
-    setQuery('');
-    setError(null);
-  }, []);
+  const clearResults = () => {
+    setQuery('')
+    setResults([])
+    setError(null)
+  }
 
-  return {
-    query,
-    setQuery,
-    results,
-    isLoading,
-    error,
-    searchByBarcode,
-    clearResults,
-  };
+  return { query, setQuery, results, isLoading, error, searchByBarcode, clearResults }
 }

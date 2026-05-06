@@ -1,153 +1,150 @@
-// ES: Lista de ventas congeladas del terminal
-// EN: Terminal frozen sales list
+// ES: Lista de ventas congeladas por terminal
+// EN: List of frozen sales by terminal
 
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { salesApiAdapter } from '../../adapters/http/salesApiAdapter';
-import { useSessionStore } from '../../infrastructure/store/sessionStore';
-import { useSale } from './useSale';
-import StatusBadge from '../../shared/components/StatusBadge';
-import LoadingSpinner from '../../shared/components/LoadingSpinner';
-import ErrorMessage from '../../shared/components/ErrorMessage';
-import type { Sale } from '../../core/types/sale.types';
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Snowflake, Play, AlertTriangle } from 'lucide-react'
+import { salesApiAdapter } from '../../adapters/http/salesApiAdapter'
+import { makeSaleUseCases } from '../../core/usecases/sale.usecases'
+import { useSale } from './useSale'
+import { useSessionStore } from '../../infrastructure/store/sessionStore'
+import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
+import { ErrorMessage } from '../../shared/components/ErrorMessage'
+import type { Sale } from '../../core/types/sale.types'
+import { getErrorMessage } from '../../infrastructure/http/ApiError'
 
-// ES: Formatea precio en pesos colombianos
-// EN: Formats price in Colombian pesos
-function formatCOP(amount: number): string {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    minimumFractionDigits: 0,
-  }).format(amount);
+const saleUc = makeSaleUseCases(salesApiAdapter)
+
+function sortFrozenByDateAsc(list: Sale[]): Sale[] {
+  return [...list].sort((a, b) => {
+    const ta = a.frozenAt ? new Date(a.frozenAt).getTime() : Number.POSITIVE_INFINITY
+    const tb = b.frozenAt ? new Date(b.frozenAt).getTime() : Number.POSITIVE_INFINITY
+    return ta - tb
+  })
 }
 
-function formatDate(dateStr: string): string {
-  return new Intl.DateTimeFormat('es-CO', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  }).format(new Date(dateStr));
-}
-
-export default function FrozenSalesList() {
-  const [frozenSales, setFrozenSales] = useState<Sale[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { terminalId } = useSessionStore();
-  const { resumeSale, isLoading: isResuming } = useSale();
-  const navigate = useNavigate();
-
-  const loadFrozenSales = async () => {
-    if (!terminalId) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const sales = await salesApiAdapter.listFrozen(terminalId);
-      // ES: Ordenar por fecha de congelamiento / EN: Sort by freeze date
-      const sorted = [...sales].sort((a, b) => {
-        const dateA = a.frozenAt ? new Date(a.frozenAt).getTime() : 0;
-        const dateB = b.frozenAt ? new Date(b.frozenAt).getTime() : 0;
-        return dateB - dateA;
-      });
-      setFrozenSales(sorted);
-    } catch (err) {
-      setError('Error al cargar ventas congeladas / Error loading frozen sales');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+export function FrozenSalesList() {
+  const navigate = useNavigate()
+  const { terminalId } = useSessionStore()
+  const { resumeSale, isLoading } = useSale()
+  const [frozenSales, setFrozenSales] = useState<Sale[]>([])
+  const [fetchLoading, setFetchLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
 
   useEffect(() => {
-    loadFrozenSales();
-  }, [terminalId]);
+    if (!terminalId) return
+    setFetchLoading(true)
+    saleUc
+      .listFrozen(terminalId)
+      .then((rows) => setFrozenSales(sortFrozenByDateAsc(rows)))
+      .catch((err) => setFetchError(getErrorMessage(err)))
+      .finally(() => setFetchLoading(false))
+  }, [terminalId])
 
   const handleResume = async (saleId: string) => {
-    await resumeSale(saleId);
-    navigate('/sale');
-  };
+    await resumeSale(saleId)
+    navigate('/sale')
+  }
 
-  if (isLoading) {
+  if (fetchLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <LoadingSpinner label="Cargando ventas congeladas... / Loading frozen sales..." />
+      <div className="flex min-h-[40vh] items-center justify-center py-16">
+        <LoadingSpinner label="Cargando ventas congeladas" />
       </div>
-    );
+    )
+  }
+  if (fetchError) {
+    return (
+      <div className="mx-auto max-w-xl p-6">
+        <div className="pos-card border-red-100/70">
+          <ErrorMessage message={fetchError} />
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="p-4">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
-          ❄️ Ventas Congeladas / Frozen Sales
-        </h1>
-        <button
-          onClick={() => navigate('/sale')}
-          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors min-h-[44px]"
-          aria-label="Volver a la venta / Back to sale"
-        >
-          ← Volver / Back
-        </button>
+    <div className="mx-auto max-w-2xl px-4 py-8 sm:p-10">
+      <div className="mb-10 flex flex-wrap items-center gap-4">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 shadow-lg shadow-indigo-500/25">
+          <Snowflake className="h-7 w-7 text-white" aria-hidden />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Ventas congeladas</h1>
+          <p className="text-sm text-slate-500">Frozen holds · Terminal {terminalId}</p>
+        </div>
       </div>
 
-      {error && <ErrorMessage message={error} onRetry={loadFrozenSales} className="mb-4" />}
-
       {frozenSales.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
-          <p className="text-xl mb-2">❄️</p>
-          <p>No hay ventas congeladas / No frozen sales</p>
+        <div className="pos-card flex flex-col items-center border-dashed bg-slate-50/70 py-20 text-center">
+          <Snowflake className="mb-5 h-12 w-12 text-slate-300" aria-hidden />
+          <p className="font-medium text-slate-600">No hay ventas en espera</p>
+          <p className="mt-1 text-sm text-slate-400">No frozen transactions</p>
         </div>
       ) : (
-        <ul className="space-y-3" aria-label="Lista de ventas congeladas / Frozen sales list">
+        <ul className="flex flex-col gap-4">
           {frozenSales.map((sale) => {
-            const isExpired = sale.status === 'CANCELLED';
-
+            const isExpired = sale.status === 'CANCELLED'
             return (
               <li
                 key={sale.id}
-                className={`bg-white rounded-xl border p-4 ${isExpired ? 'border-red-200 bg-red-50' : 'border-gray-200'}`}
+                className={`pos-card overflow-hidden border-l-[4px] p-5 transition hover:shadow-pos-lg ${
+                  isExpired
+                    ? 'border-l-red-500 bg-gradient-to-br from-red-50/90 to-white'
+                    : 'border-l-sky-400'
+                }`}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-mono text-sm text-gray-500">#{sale.id.slice(0, 8)}</span>
-                      <StatusBadge status={isExpired ? 'CANCELLED' : 'FROZEN'} />
-                      {isExpired && (
-                        <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
-                          Expirada / Expired
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      {sale.frozenAt
-                        ? `Congelada: ${formatDate(sale.frozenAt)} / Frozen: ${formatDate(sale.frozenAt)}`
-                        : `Creada: ${formatDate(sale.createdAt)} / Created: ${formatDate(sale.createdAt)}`}
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="truncate font-bold text-slate-900">
+                      Venta #{sale.id.slice(0, 12)}
+                      {sale.id.length > 12 ? '…' : ''}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      {sale.items.length} ítem(s) — Total: {formatCOP(sale.total)}
+                    <p className="mt-1 text-sm text-slate-600">
+                      {sale.items.length} ítem ·{' '}
+                      <span className="font-semibold text-indigo-600">
+                        $
+                        {sale.total.toLocaleString('es-CO')}
+                      </span>
                     </p>
+                    {sale.frozenAt && (
+                      <p className="mt-2 text-xs text-slate-400">
+                        {new Date(sale.frozenAt).toLocaleString('es-CO')}
+                      </p>
+                    )}
+                    {isExpired && (
+                      <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2 text-xs font-semibold text-red-700 ring-1 ring-red-100">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        Expirada / Expired
+                      </div>
+                    )}
                   </div>
 
-                  {/* ES: Botón reanudar / EN: Resume button */}
-                  {!isExpired ? (
+                  {!isExpired && (
                     <button
+                      type="button"
                       onClick={() => handleResume(sale.id)}
-                      disabled={isResuming}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors min-h-[44px] min-w-[44px] disabled:opacity-50"
-                      aria-label={`Reanudar venta ${sale.id} / Resume sale ${sale.id}`}
+                      disabled={isLoading}
+                      className="pos-btn-primary shrink-0 gap-2 whitespace-nowrap disabled:opacity-50"
                     >
-                      ▶ Reanudar / Resume
+                      <Play className="h-4 w-4" />
+                      Reanudar / Resume
                     </button>
-                  ) : (
-                    <div className="text-sm text-red-600 text-right">
-                      <p>Venta expirada</p>
-                      <p>Sale expired</p>
-                    </div>
                   )}
                 </div>
               </li>
-            );
+            )
           })}
         </ul>
       )}
+
+      <button
+        type="button"
+        onClick={() => navigate('/sale')}
+        className="pos-btn-secondary mt-8 w-full"
+      >
+        ← Volver a venta / Back to sale
+      </button>
     </div>
-  );
+  )
 }

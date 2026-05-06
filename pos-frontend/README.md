@@ -1,73 +1,24 @@
-# React + TypeScript + Vite
+# POS Frontend (Supermarket)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación **React + TypeScript + Vite** para el punto de venta. Consume la Sales API REST (`VITE_SALES_API_URL`). En desarrollo, **Mock Service Worker** puede simular el backend cuando `VITE_USE_MSW` no es `false`.
 
-Currently, two official plugins are available:
+## Scripts
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Comando | Descripción |
+|---------|-------------|
+| `npm run dev` | Servidor de desarrollo (http://localhost:5173) |
+| `npm run build` | `tsc` + bundle producción |
+| `npm run preview` | Previsualiza el build |
+| `npm test` | Vitest |
+| `npm run test:e2e` | Playwright |
 
-## React Compiler
+Copia `.env.example` → `.env` y ajusta URLs y terminal.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Estructura de carpetas (`src`)
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- **`adapters/http`** — llamadas REST (productos, clientes, ventas).
+- **`core`** — tipos y puertos del dominio.
+- **`features`** — pantallas y hooks por módulo (auth, sale, checkout, …).
+- **`infrastructure`** — axios, errores, stores Zustand.
+- **`mocks`** — handlers MSW y backend en memoria (solo demo/dev).
+- **`shared`** — componentes y hooks reutilizables.

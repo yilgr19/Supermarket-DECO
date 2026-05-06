@@ -1,58 +1,42 @@
 // ES: Resumen de totales de la venta
 // EN: Sale totals summary
 
-import type { Sale } from '../../core/types/sale.types';
-
-// ES: Formatea precio en pesos colombianos
-// EN: Formats price in Colombian pesos
-function formatCOP(amount: number): string {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    minimumFractionDigits: 0,
-  }).format(amount);
-}
+import type { Sale } from '../../core/types/sale.types'
 
 interface TotalsSummaryProps {
-  sale: Sale | null;
+  sale: Sale | null
 }
 
-export default function TotalsSummary({ sale }: TotalsSummaryProps) {
-  if (!sale) {
-    return (
-      <div className="border-t border-gray-200 pt-4">
-        <p className="text-gray-400 text-center text-sm">Sin venta activa / No active sale</p>
-      </div>
-    );
-  }
+const fmt = (n: number) => `$${n.toLocaleString('es-CO', { minimumFractionDigits: 0 })}`
+
+export function TotalsSummary({ sale }: TotalsSummaryProps) {
+  if (!sale) return null
 
   return (
-    <div className="border-t border-gray-200 pt-4 space-y-2">
-      {/* ES: Subtotal / EN: Subtotal */}
-      <div className="flex justify-between text-sm text-gray-600">
-        <span>Subtotal:</span>
-        <span>{formatCOP(sale.subtotal)}</span>
-      </div>
-
-      {/* ES: Impuesto 19% / EN: Tax 19% */}
-      <div className="flex justify-between text-sm text-gray-600">
-        <span>Impuesto (19%) / Tax (19%):</span>
-        <span>{formatCOP(sale.tax)}</span>
-      </div>
-
-      {/* ES: Descuento / EN: Discount */}
-      {sale.discount > 0 && (
-        <div className="flex justify-between text-sm text-green-600">
-          <span>Descuento / Discount:</span>
-          <span>-{formatCOP(sale.discount)}</span>
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-pos">
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-500 via-indigo-500 to-violet-500" />
+      <dl className="space-y-2 p-5 text-sm">
+        <div className="flex justify-between text-slate-600">
+          <dt>Subtotal</dt>
+          <dd className="font-semibold tabular-nums text-slate-900">{fmt(sale.subtotal)}</dd>
         </div>
-      )}
-
-      {/* ES: Total / EN: Total */}
-      <div className="flex justify-between text-xl font-bold text-gray-900 border-t border-gray-200 pt-2 mt-2">
-        <span>TOTAL:</span>
-        <span>{formatCOP(sale.total)}</span>
-      </div>
+        <div className="flex justify-between text-slate-600">
+          <dt>Impuesto / Tax</dt>
+          <dd className="font-semibold tabular-nums text-slate-900">{fmt(sale.tax)}</dd>
+        </div>
+        {sale.discount > 0 && (
+          <div className="flex justify-between rounded-lg bg-emerald-50/80 px-2 py-1 text-emerald-800">
+            <dt className="font-medium">Descuento / Discount</dt>
+            <dd className="font-bold tabular-nums">−{fmt(sale.discount)}</dd>
+          </div>
+        )}
+        <div className="flex justify-between border-t border-slate-200 pt-3 text-lg font-bold tracking-tight text-slate-900">
+          <dt>TOTAL</dt>
+          <dd className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text tabular-nums text-transparent">
+            {fmt(sale.total)}
+          </dd>
+        </div>
+      </dl>
     </div>
-  );
+  )
 }

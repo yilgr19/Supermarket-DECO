@@ -1,106 +1,59 @@
-// ES: Pruebas de componente para LoginPage
-// EN: Component tests for LoginPage
+// ES: Pruebas del componente LoginPage
+// EN: LoginPage component tests
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
-import LoginPage from './LoginPage';
-import { useSessionStore } from '../../infrastructure/store/sessionStore';
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { LoginPage } from './LoginPage'
 
-// ES: Mock de useNavigate / EN: Mock useNavigate
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
+// ES: Mock del hook useAuth para aislar el componente
+// EN: Mock useAuth hook to isolate the component
+const mockHandleLogin = vi.fn()
+vi.mock('./useAuth', () => ({
+  useAuth: () => ({
+    cashierId: null,
+    terminalId: null,
+    isAuthenticated: false,
+    handleLogin: mockHandleLogin,
+    handleLogout: vi.fn(),
+  }),
+}))
 
-function renderLoginPage() {
+function renderLogin() {
   return render(
     <MemoryRouter>
       <LoginPage />
     </MemoryRouter>
-  );
+  )
 }
 
 describe('LoginPage', () => {
-  beforeEach(() => {
-    mockNavigate.mockClear();
-    useSessionStore.setState({ cashierId: null, terminalId: null, isAuthenticated: false });
-  });
+  it('renders cashier and terminal inputs', () => {
+    renderLogin()
+    expect(screen.getByLabelText(/ID de Cajero/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/ID de Terminal/i)).toBeInTheDocument()
+  })
 
-  it('should render login form with cashier and terminal fields', () => {
-    renderLoginPage();
-
-    expect(screen.getByLabelText(/ID del cajero/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/ID del terminal/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /iniciar sesión/i })).toBeInTheDocument();
-  });
-
-  it('should show validation errors when submitting empty form', async () => {
-    renderLoginPage();
-
+  it('shows validation errors when submitting empty form', () => {
+    renderLogin()
+    const submitBtn = screen.getByRole('button', { name: /Iniciar Sesión/i })
     // ES: Limpiar el campo de terminal que tiene valor por defecto
-    // EN: Clear the terminal field that has a default value
-    const terminalInput = screen.getByLabelText(/ID del terminal/i);
-    await userEvent.clear(terminalInput);
+    // EN: Clear terminal field that has a default value
+    fireEvent.change(screen.getByLabelText(/ID de Terminal/i), { target: { value: '' } })
+    fireEvent.click(submitBtn)
+    expect(screen.getByText(/ID de cajero requerido/i)).toBeInTheDocument()
+    expect(screen.getByText(/ID de terminal requerido/i)).toBeInTheDocument()
+  })
 
-    const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
-    await userEvent.click(submitButton);
-
-    await waitFor(() => {
-      expect(screen.getByText(/El ID del cajero es requerido/i)).toBeInTheDocument();
-    });
-  });
-
-  it('should show error when cashier ID is empty', async () => {
-    renderLoginPage();
-
-    const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
-    await userEvent.click(submitButton);
-
-    await waitFor(() => {
-      expect(screen.getByText(/El ID del cajero es requerido/i)).toBeInTheDocument();
-    });
-  });
-
-  it('should login and navigate to /sale on successful submit', async () => {
-    renderLoginPage();
-
-    const cashierInput = screen.getByLabelText(/ID del cajero/i);
-    await userEvent.type(cashierInput, 'CAJERO-001');
-
-    const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
-    await userEvent.click(submitButton);
-
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/sale');
-    });
-
-    expect(useSessionStore.getState().isAuthenticated).toBe(true);
-    expect(useSessionStore.getState().cashierId).toBe('CAJERO-001');
-  });
-
-  it('should store cashier ID and terminal ID in session store', async () => {
-    renderLoginPage();
-
-    const cashierInput = screen.getByLabelText(/ID del cajero/i);
-    const terminalInput = screen.getByLabelText(/ID del terminal/i);
-
-    await userEvent.clear(terminalInput);
-    await userEvent.type(cashierInput, 'CAJERO-002');
-    await userEvent.type(terminalInput, 'TERM-002');
-
-    const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
-    await userEvent.click(submitButton);
-
-    await waitFor(() => {
-      const state = useSessionStore.getState();
-      expect(state.cashierId).toBe('CAJERO-002');
-      expect(state.terminalId).toBe('TERM-002');
-    });
-  });
-});
+  it('calls handleLogin with correct values on valid submit', () => {
+    renderLogin()
+    fireEvent.change(screen.getByLabelText(/ID de Cajero/i), {
+      target: { value: 'CAJERO-01' },
+    })
+    fireEvent.change(screen.getByLabelText(/ID de Terminal/i), {
+      target: { value: 'TERM-001' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Iniciar Sesión/i }))
+    expect(mockHandleLogin).toHaveBeenCalledWith('CAJERO-01', 'TERM-001')
+  })
+})

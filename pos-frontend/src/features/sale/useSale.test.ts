@@ -68,7 +68,7 @@ describe('useSale', () => {
     });
 
     expect(useSaleStore.getState().activeSale).toEqual(mockSale);
-    expect(result.current.error).toBeNull();
+    expect(result.current.error?.message).toBeNull();
   });
 
   it('should add an item to the sale', async () => {
@@ -87,7 +87,7 @@ describe('useSale', () => {
     });
 
     expect(useSaleStore.getState().activeSale?.items).toHaveLength(1);
-    expect(result.current.error).toBeNull();
+    expect(result.current.error?.message).toBeNull();
   });
 
   it('should handle 409 stock error when adding item', async () => {
@@ -113,8 +113,8 @@ describe('useSale', () => {
       await result.current.addItemToSale('prod-1', undefined, 100);
     });
 
-    expect(result.current.stockError).not.toBeNull();
-    expect(result.current.stockError?.items?.[0].productName).toBe('Leche 1L');
+    expect(result.current.error?.outOfStockItems).not.toBeNull();
+    expect(result.current.error?.outOfStockItems?.[0]?.productName).toBe('Leche 1L');
   });
 
   it('should update item quantity', async () => {

@@ -1,41 +1,26 @@
-// ES: Hook para obtener y mostrar recibos
-// EN: Hook for fetching and displaying receipts
+// ES: Hook para obtener recibos por TransactionId
+// EN: Hook to fetch receipts by TransactionId
 
-import { useState, useCallback } from 'react';
-import axiosInstance from '../../infrastructure/http/axiosClient';
-import { ApiError } from '../../infrastructure/http/axiosClient';
-import type { Receipt } from '../../core/types/receipt.types';
+import { useState, useEffect } from 'react'
+import axiosClient from '../../infrastructure/http/axiosClient'
+import type { Receipt } from '../../core/types/receipt.types'
+import { getErrorMessage } from '../../infrastructure/http/ApiError'
 
-interface UseReceiptReturn {
-  receipt: Receipt | null;
-  isLoading: boolean;
-  error: string | null;
-  getReceipt: (transactionId: string) => Promise<void>;
-}
+export function useReceipt(transactionId: string | undefined) {
+  const [receipt, setReceipt] = useState<Receipt | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-export function useReceipt(): UseReceiptReturn {
-  const [receipt, setReceipt] = useState<Receipt | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!transactionId) return
+    setIsLoading(true)
+    setError(null)
+    axiosClient
+      .get<Receipt>(`/api/v1/receipts/${transactionId}`)
+      .then((res) => setReceipt(res.data))
+      .catch((err) => setError(getErrorMessage(err)))
+      .finally(() => setIsLoading(false))
+  }, [transactionId])
 
-  // ES: Obtiene un recibo por ID de transacción
-  // EN: Gets a receipt by transaction ID
-  const getReceipt = useCallback(async (transactionId: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await axiosInstance.get<Receipt>(`/api/v1/receipts/${transactionId}`);
-      setReceipt(response.data);
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError('Error al obtener el recibo / Error fetching receipt');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  return { receipt, isLoading, error, getReceipt };
+  return { receipt, isLoading, error }
 }

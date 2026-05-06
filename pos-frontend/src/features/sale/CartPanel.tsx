@@ -1,73 +1,102 @@
 // ES: Panel del carrito de compras
 // EN: Shopping cart panel
 
-import CartItem from './CartItem';
-import ErrorMessage from '../../shared/components/ErrorMessage';
-import type { Sale } from '../../core/types/sale.types';
+import { useState } from 'react'
+import { ShoppingCart } from 'lucide-react'
+import { CartItemRow } from './CartItem'
+import type { Sale, SaleItem } from '../../core/types/sale.types'
+import type { OutOfStockItem } from '../../core/types/sale.types'
+import { ConfirmDialog } from '../../shared/components/ConfirmDialog'
 
 interface CartPanelProps {
-  sale: Sale | null;
-  onUpdateQuantity: (itemId: string, quantity: number) => void;
-  onRemoveItem: (itemId: string) => void;
-  stockError?: {
-    message: string;
-    items?: { productId: string; productName: string; availableStock: number }[];
-  } | null;
-  disabled?: boolean;
+  sale: Sale | null
+  isLoading: boolean
+  stockError: OutOfStockItem[] | null
+  onUpdateQuantity: (itemId: string, quantity: number) => void
+  onRemoveItem: (itemId: string) => void
 }
 
-export default function CartPanel({
+export function CartPanel({
   sale,
+  isLoading,
+  stockError,
   onUpdateQuantity,
   onRemoveItem,
-  stockError,
-  disabled = false,
 }: CartPanelProps) {
-  const isEditable = sale?.status === 'ACTIVE';
+  const [itemPendingRemove, setItemPendingRemove] = useState<SaleItem | null>(null)
+
+  const isEditable = sale?.status === 'ACTIVE'
+
+  if (!sale || sale.items.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/70 py-16 text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+          <ShoppingCart className="h-7 w-7" aria-hidden="true" />
+        </div>
+        <p className="text-sm font-medium text-slate-600">Carrito vacío / Empty cart</p>
+        <p className="mt-1 max-w-[240px] text-xs text-slate-400">
+          Busca productos o usa el código de barras / Search or scan barcode
+        </p>
+      </div>
+    )
+  }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* ES: Error de stock 409 / EN: Stock error 409 */}
-      {stockError && (
-        <div className="mb-3">
-          <ErrorMessage message={stockError.message} />
-          {stockError.items && stockError.items.length > 0 && (
-            <ul className="mt-2 text-sm text-red-700 bg-red-50 rounded-lg p-3">
-              {stockError.items.map((item) => (
-                <li key={item.productId}>
-                  {item.productName}: {item.availableStock} disponibles / available
+    <>
+      <div className="flex flex-col gap-3">
+        {stockError && stockError.length > 0 && (
+          <div
+            role="alert"
+            aria-live="polite"
+            className="rounded-xl border border-amber-200/90 bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm"
+          >
+            <p className="mb-2 text-sm font-semibold text-amber-900">Stock insuficiente</p>
+            <ul className="space-y-1.5">
+              {stockError.map((item) => (
+                <li key={item.productId} className="text-xs text-amber-800">
+                  <span className="font-semibold">{item.productName}</span>
+                  {' — '}
+                  solicitado {item.requested}, disponible {item.available}
                 </li>
               ))}
             </ul>
-          )}
-        </div>
-      )}
+          </div>
+        )}
 
-      {/* ES: Lista de ítems / EN: Items list */}
-      {!sale || sale.items.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-gray-400 text-center py-8" role="status">
-            🛒 Carrito vacío / Empty cart
-            <br />
-            <span className="text-sm">Busque y agregue productos / Search and add products</span>
-          </p>
-        </div>
-      ) : (
-        <ul
-          className="flex-1 overflow-y-auto"
-          aria-label="Ítems del carrito / Cart items"
-        >
+        <ul className="divide-y divide-slate-100" aria-label="Ítems del carrito / Cart items">
           {sale.items.map((item) => (
-            <CartItem
+            <CartItemRow
               key={item.id}
               item={item}
+              isEditable={isEditable && !isLoading}
               onUpdateQuantity={onUpdateQuantity}
-              onRemove={onRemoveItem}
-              disabled={disabled || !isEditable}
+              onRequestRemove={(line) => setItemPendingRemove(line)}
             />
           ))}
         </ul>
-      )}
-    </div>
-  );
+      </div>
+
+      <ConfirmDialog
+        open={!!itemPendingRemove}
+        onOpenChange={(open) => {
+          if (!open) setItemPendingRemove(null)
+        }}
+        title="Quitar producto / Remove line"
+        description={
+          itemPendingRemove
+            ? `¿Eliminar «${itemPendingRemove.productName}» del carrito? / Remove this line from the cart?`
+            : undefined
+        }
+        cancelLabel="Cancelar / Cancel"
+        confirmLabel="Confirmar eliminación / Confirm removal"
+        pending={isLoading}
+        onConfirm={() => {
+          if (itemPendingRemove) {
+            onRemoveItem(itemPendingRemove.id)
+            setItemPendingRemove(null)
+          }
+        }}
+      />
+    </>
+  )
 }

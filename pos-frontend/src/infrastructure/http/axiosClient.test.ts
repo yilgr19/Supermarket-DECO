@@ -4,7 +4,8 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import axiosInstance, { ApiError } from './axiosClient';
+import axiosInstance from './axiosClient'
+import { ApiError } from './ApiError'
 
 const BASE_URL = 'http://localhost:8080';
 

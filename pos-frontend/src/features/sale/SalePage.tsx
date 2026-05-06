@@ -1,255 +1,249 @@
-// ES: Pantalla principal de venta — integra todos los componentes del POS
-// EN: Main sale screen — integrates all POS components
+// ES: Pantalla principal de venta POS
+// EN: Main POS sale screen
 
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSale } from './useSale';
-import { useSaleStore } from '../../infrastructure/store/saleStore';
-import { useAuth } from '../auth/useAuth';
-import ProductSearch from '../products/ProductSearch';
-import BarcodeScanner from '../products/BarcodeScanner';
-import CustomerSearch from '../customers/CustomerSearch';
-import CartPanel from './CartPanel';
-import TotalsSummary from './TotalsSummary';
-import DiscountForm from './DiscountForm';
-import CancelDialog from './CancelDialog';
-import CheckoutModal from '../checkout/CheckoutModal';
-import StatusBadge from '../../shared/components/StatusBadge';
-import LoadingSpinner from '../../shared/components/LoadingSpinner';
-import ErrorMessage from '../../shared/components/ErrorMessage';
-import type { Product } from '../../core/types/product.types';
-import { useProductSearch } from '../products/useProductSearch';
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Snowflake, XCircle, ShoppingBag, LogOut, List } from 'lucide-react'
+import { useSale } from './useSale'
+import { CartPanel } from './CartPanel'
+import { TotalsSummary } from './TotalsSummary'
+import { DiscountForm } from './DiscountForm'
+import { CancelDialog } from './CancelDialog'
+import { ProductSearch } from '../products/ProductSearch'
+import { BarcodeScanner } from '../products/BarcodeScanner'
+import { CustomerSearch } from '../customers/CustomerSearch'
+import { CheckoutModal } from '../checkout/CheckoutModal'
+import { SaleStatusBadge } from '../../shared/components/StatusBadge'
+import { ErrorMessage } from '../../shared/components/ErrorMessage'
+import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
+import { useSessionStore } from '../../infrastructure/store/sessionStore'
+import { useSaleStore } from '../../infrastructure/store/saleStore'
+import type { Product } from '../../core/types/product.types'
+import type { DiscountType } from '../../core/types/sale.types'
 
-export default function SalePage() {
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showCheckout, setShowCheckout] = useState(false);
-
-  const { activeSale } = useSaleStore();
-  const { cashierId, terminalId, logout } = useAuth();
-  const navigate = useNavigate();
-
+export function SalePage() {
+  const navigate = useNavigate()
+  const { cashierId, terminalId, logout } = useSessionStore()
+  const { selectedCustomer, setSelectedCustomer } = useSaleStore()
   const {
+    activeSale,
     isLoading,
     error,
-    stockError,
+    clearError,
     createSale,
     addItemToSale,
     updateItemQuantity,
     removeItem,
     applyDiscount,
-    removeDiscount,
     freezeSale,
     cancelSale,
-    clearError,
-  } = useSale();
+  } = useSale()
 
-  const { searchByBarcode } = useProductSearch();
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
+  const [showCheckout, setShowCheckout] = useState(false)
+  const [discountError, setDiscountError] = useState<string | null>(null)
 
-  // ES: Al montar, si no hay venta activa, crear una nueva
-  // EN: On mount, if no active sale, create a new one
+  // ES: Crear venta automáticamente al montar si no hay una activa
+  // EN: Auto-create sale on mount if none is active
   useEffect(() => {
     if (!activeSale) {
-      createSale();
+      createSale()
     }
-  }, []);
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAddProduct = async (product: Product) => {
-    await addItemToSale(product.id, undefined, 1);
-  };
+    await addItemToSale(product.id, undefined, 1)
+  }
 
   const handleBarcodeProduct = async (product: Product) => {
-    await addItemToSale(product.id, undefined, 1);
-  };
+    await addItemToSale(product.id, undefined, 1)
+  }
+
+  const handleApplyDiscount = async (type: DiscountType, value: number) => {
+    setDiscountError(null)
+    const result = await applyDiscount(type, value)
+    if (!result) setDiscountError(error?.message ?? 'Error al aplicar descuento')
+  }
+
+  const handleRemoveDiscount = async () => {
+    await applyDiscount('FIXED_AMOUNT', 0)
+  }
 
   const handleFreeze = async () => {
-    await freezeSale();
-  };
+    await freezeSale()
+  }
 
-  const handleCancelConfirm = async (reason: string) => {
-    await cancelSale(reason);
-    setShowCancelDialog(false);
-  };
+  const handleCancel = async (reason: string) => {
+    await cancelSale(reason)
+    setShowCancelDialog(false)
+  }
 
-  const isActive = activeSale?.status === 'ACTIVE';
-  const isFrozenOrActive = activeSale?.status === 'ACTIVE' || activeSale?.status === 'FROZEN';
-  const hasDiscount = (activeSale?.discount ?? 0) > 0;
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
+  const isActive = activeSale?.status === 'ACTIVE'
+  const isFrozenOrActive =
+    activeSale?.status === 'ACTIVE' || activeSale?.status === 'FROZEN'
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="flex min-h-screen flex-col">
       {/* ES: Header / EN: Header */}
-      <header className="bg-white shadow-sm px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold text-gray-900">
-            🛒 {import.meta.env.VITE_STORE_NAME || 'Supermercado POS'}
-          </h1>
-          <span className="text-sm text-gray-500">
-            Terminal: {terminalId}
-          </span>
-          {activeSale && <StatusBadge status={activeSale.status} />}
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600">
-            👤 {cashierId}
-          </span>
-          <button
-            onClick={() => navigate('/sale/frozen')}
-            className="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-sm transition-colors min-h-[44px]"
-            aria-label="Ver ventas congeladas / View frozen sales"
-          >
-            ❄️ Congeladas / Frozen
-          </button>
-          <button
-            onClick={logout}
-            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm transition-colors min-h-[44px]"
-            aria-label="Cerrar sesión / Logout"
-          >
-            Salir / Logout
-          </button>
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-4 py-3.5 text-white shadow-pos-lg">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
+              <ShoppingBag className="h-5 w-5 text-violet-200" aria-hidden="true" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold tracking-tight">
+                {import.meta.env.VITE_STORE_NAME || 'Supermercado POS'}
+              </p>
+              <p className="truncate text-xs text-slate-400">
+                Terminal <span className="text-violet-200">{terminalId}</span>
+                {' · '}
+                Cajero <span className="text-violet-200">{cashierId}</span>
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            {activeSale && <SaleStatusBadge status={activeSale.status} />}
+            <button
+              onClick={() => navigate('/sale/frozen')}
+              className="pos-btn-quiet"
+              aria-label="Ver ventas congeladas / View frozen sales"
+              type="button"
+            >
+              <List className="h-5 w-5" />
+            </button>
+            <button
+              onClick={handleLogout}
+              className="pos-btn-quiet"
+              aria-label="Cerrar sesión / Logout"
+              type="button"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </header>
 
       {/* ES: Contenido principal / EN: Main content */}
-      <main className="flex-1 flex gap-4 p-4 overflow-hidden">
-        {/* ES: Panel izquierdo — búsqueda / EN: Left panel — search */}
-        <div className="w-1/2 flex flex-col gap-4 overflow-y-auto">
-          {/* ES: Búsqueda de productos / EN: Product search */}
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">
-              🔍 Productos / Products
-            </h2>
-            <ProductSearch
-              onAddProduct={handleAddProduct}
-              disabled={!isActive}
-            />
-            <div className="mt-4">
-              <BarcodeScanner
-                onProductFound={handleBarcodeProduct}
-                searchByBarcode={searchByBarcode}
-                disabled={!isActive}
-              />
+      <main className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-4 p-4 lg:flex-row lg:gap-5">
+        {/* ES: Panel izquierdo: búsqueda / EN: Left panel: search */}
+        <aside className="flex flex-col gap-4 lg:w-80 xl:w-96 lg:shrink-0">
+          <section className="pos-card !p-4 sm:!p-5">
+            <h2 className="pos-section-title">Productos / Products</h2>
+            <ProductSearch onAddProduct={handleAddProduct} />
+            <div className="mt-3">
+              <BarcodeScanner onProductFound={handleBarcodeProduct} />
             </div>
-          </div>
+          </section>
 
-          {/* ES: Búsqueda de clientes / EN: Customer search */}
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <CustomerSearch disabled={!isActive} />
-          </div>
-        </div>
+          <section className="pos-card !p-4 sm:!p-5">
+            <h2 className="pos-section-title">Cliente / Customer</h2>
+            <CustomerSearch
+              selectedCustomer={selectedCustomer}
+              onSelectCustomer={setSelectedCustomer}
+              onClearCustomer={() => setSelectedCustomer(null)}
+            />
+          </section>
+        </aside>
 
-        {/* ES: Panel derecho — carrito / EN: Right panel — cart */}
-        <div className="w-1/2 flex flex-col gap-4">
-          <div className="bg-white rounded-xl p-4 shadow-sm flex-1 flex flex-col overflow-hidden">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">
-              🛒 Carrito / Cart
-            </h2>
+        {/* ES: Panel derecho: carrito / EN: Right panel: cart */}
+        <section className="flex min-w-0 flex-1 flex-col gap-4">
+          <div className="pos-card flex-1">
+            <h2 className="pos-section-title">Carrito / Cart</h2>
 
-            {/* ES: Estado de carga / EN: Loading state */}
-            {isLoading && (
-              <div className="flex items-center gap-2 mb-3">
-                <LoadingSpinner size="sm" />
-                <span className="text-sm text-gray-500">Procesando... / Processing...</span>
+            {isLoading && !activeSale && (
+              <div className="flex justify-center py-8">
+                <LoadingSpinner label="Creando venta..." />
               </div>
             )}
 
-            {/* ES: Error general / EN: General error */}
-            {error && (
-              <ErrorMessage message={error} onRetry={clearError} className="mb-3" />
+            {error && !isLoading && (
+              <ErrorMessage message={error.message ?? ''} onRetry={clearError} />
             )}
 
-            {/* ES: Panel del carrito / EN: Cart panel */}
-            <div className="flex-1 overflow-hidden">
-              <CartPanel
-                sale={activeSale}
-                onUpdateQuantity={updateItemQuantity}
-                onRemoveItem={removeItem}
-                stockError={stockError}
-                disabled={isLoading}
-              />
-            </div>
-
-            {/* ES: Totales / EN: Totals */}
-            <TotalsSummary sale={activeSale} />
-
-            {/* ES: Formulario de descuento / EN: Discount form */}
-            {isActive && (
-              <DiscountForm
-                onApplyDiscount={applyDiscount}
-                onRemoveDiscount={removeDiscount}
-                hasDiscount={hasDiscount}
-                isLoading={isLoading}
-                disabled={!isActive}
-              />
-            )}
+            <CartPanel
+              sale={activeSale}
+              isLoading={isLoading}
+              stockError={error?.outOfStockItems ?? null}
+              onUpdateQuantity={updateItemQuantity}
+              onRemoveItem={removeItem}
+            />
           </div>
 
-          {/* ES: Barra de acciones / EN: Action bar */}
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <div className="flex gap-3">
-              {/* ES: Botón congelar / EN: Freeze button */}
+          {activeSale && (
+            <>
+              <TotalsSummary sale={activeSale} />
+
               {isActive && (
-                <button
-                  onClick={handleFreeze}
-                  disabled={isLoading}
-                  className="flex-1 py-3 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg font-medium transition-colors min-h-[44px] disabled:opacity-50"
-                  aria-label="Congelar venta / Freeze sale"
-                >
-                  ❄️ Congelar / Freeze
-                </button>
+                <DiscountForm
+                  hasDiscount={(activeSale.discount ?? 0) > 0}
+                  isLoading={isLoading}
+                  error={discountError}
+                  onApply={handleApplyDiscount}
+                  onRemove={handleRemoveDiscount}
+                />
               )}
 
-              {/* ES: Botón cancelar / EN: Cancel button */}
-              {isFrozenOrActive && (
-                <button
-                  onClick={() => setShowCancelDialog(true)}
-                  disabled={isLoading}
-                  className="flex-1 py-3 bg-red-100 hover:bg-red-200 text-red-800 rounded-lg font-medium transition-colors min-h-[44px] disabled:opacity-50"
-                  aria-label="Cancelar venta / Cancel sale"
-                >
-                  ✕ Cancelar / Cancel
-                </button>
-              )}
+              {/* ES: Barra de acciones / EN: Action bar */}
+              <div className="flex flex-wrap gap-3">
+                {isActive && (
+                  <button
+                    onClick={handleFreeze}
+                    disabled={isLoading}
+                    type="button"
+                    className="pos-btn-freeze disabled:opacity-50"
+                  >
+                    <Snowflake className="h-4 w-4" aria-hidden="true" />
+                    Congelar / Freeze
+                  </button>
+                )}
 
-              {/* ES: Botón checkout / EN: Checkout button */}
-              {isActive && (activeSale?.items?.length ?? 0) > 0 && (
-                <button
-                  onClick={() => setShowCheckout(true)}
-                  disabled={isLoading}
-                  className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-lg transition-colors min-h-[44px] disabled:opacity-50"
-                  aria-label="Proceder al checkout / Proceed to checkout"
-                >
-                  💳 CHECKOUT
-                </button>
-              )}
+                {isFrozenOrActive && (
+                  <button
+                    onClick={() => setShowCancelDialog(true)}
+                    disabled={isLoading}
+                    type="button"
+                    className="pos-btn-danger flex-1 disabled:opacity-50"
+                  >
+                    <XCircle className="h-4 w-4" aria-hidden="true" />
+                    Cancelar / Cancel
+                  </button>
+                )}
 
-              {/* ES: Botón nueva venta si no hay activa / EN: New sale button if none active */}
-              {!activeSale && (
-                <button
-                  onClick={createSale}
-                  disabled={isLoading}
-                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg transition-colors min-h-[44px] disabled:opacity-50"
-                  aria-label="Nueva venta / New sale"
-                >
-                  ➕ Nueva Venta / New Sale
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+                {isActive && (
+                  <button
+                    onClick={() => setShowCheckout(true)}
+                    disabled={isLoading || activeSale.items.length === 0}
+                    type="button"
+                    className="pos-btn-primary min-w-[140px] flex-1 shadow-indigo-500/20 disabled:opacity-50"
+                  >
+                    Checkout
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </section>
       </main>
 
-      {/* ES: Diálogo de cancelación / EN: Cancel dialog */}
+      {/* ES: Modales / EN: Modals */}
       <CancelDialog
         isOpen={showCancelDialog}
-        onConfirm={handleCancelConfirm}
-        onCancel={() => setShowCancelDialog(false)}
         isLoading={isLoading}
+        onConfirm={handleCancel}
+        onCancel={() => setShowCancelDialog(false)}
       />
 
-      {/* ES: Modal de checkout / EN: Checkout modal */}
       <CheckoutModal
         isOpen={showCheckout}
         onClose={() => setShowCheckout(false)}
+        selectedCustomer={selectedCustomer}
       />
     </div>
-  );
+  )
 }

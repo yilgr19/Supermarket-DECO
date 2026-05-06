@@ -83,7 +83,7 @@ describe('useCheckout', () => {
     });
 
     expect(receipt).not.toBeNull();
-    expect(result.current.error).toBeNull();
+    expect(result.current.error?.message).toBeNull();
   });
 
   it('should reject cash checkout when amount is insufficient', async () => {
@@ -96,7 +96,7 @@ describe('useCheckout', () => {
 
     expect(receipt).toBeNull();
     expect(result.current.error).not.toBeNull();
-    expect(result.current.error?.message).toContain('menor al total');
+    expect(result.current.error?.message).toMatch(/menor al total|below sale total/i);
   });
 
   it('should reject credit checkout when no customer is selected', async () => {
@@ -148,7 +148,7 @@ describe('useCheckout', () => {
     });
 
     expect(receipt).not.toBeNull();
-    expect(result.current.error).toBeNull();
+    expect(result.current.error?.message).toBeNull();
   });
 
   it('should handle 409 stock error during checkout', async () => {

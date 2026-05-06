@@ -1,15 +1,12 @@
-// ES: Componente de ruta protegida — redirige al login si no hay sesión
-// EN: Protected route component — redirects to login if no session
+// ES: Rutas protegidas — solo con sesión de cajero
+// EN: Protected routes — require cashier session
 
-import { Navigate, Outlet } from 'react-router-dom';
-import { useSessionStore } from '../../infrastructure/store/sessionStore';
+import { Navigate } from 'react-router-dom'
+import type { ReactNode } from 'react'
+import { useSessionStore } from '../../infrastructure/store/sessionStore'
 
-export default function ProtectedRoute() {
-  const { isAuthenticated } = useSessionStore();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <Outlet />;
+export function ProtectedRoute({ children }: { children: ReactNode }) {
+  const { isAuthenticated } = useSessionStore()
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  return <>{children}</>
 }

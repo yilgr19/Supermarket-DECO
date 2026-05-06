@@ -1,114 +1,121 @@
-// ES: Modal de cancelación de venta con campo de motivo
-// EN: Sale cancellation modal with reason field
+// ES: Diálogo de cancelación de venta con campo de motivo
+// EN: Sale cancellation dialog with reason field
 
-import { useState } from 'react';
+import { useState } from 'react'
+import { X } from 'lucide-react'
 
-const MAX_REASON_LENGTH = 255;
+const MAX_REASON_LENGTH = 255
 
 interface CancelDialogProps {
-  isOpen: boolean;
-  onConfirm: (reason: string) => Promise<void>;
-  onCancel: () => void;
-  isLoading?: boolean;
+  isOpen: boolean
+  isLoading: boolean
+  onConfirm: (reason: string) => void
+  onCancel: () => void
 }
 
-export default function CancelDialog({ isOpen, onConfirm, onCancel, isLoading = false }: CancelDialogProps) {
-  const [reason, setReason] = useState('');
-  const [error, setError] = useState<string | null>(null);
+export function CancelDialog({ isOpen, isLoading, onConfirm, onCancel }: CancelDialogProps) {
+  const [reason, setReason] = useState('')
+  const [touched, setTouched] = useState(false)
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
-  const handleConfirm = async () => {
-    if (!reason.trim()) {
-      setError('El motivo es requerido / Reason is required');
-      return;
+  const isValid = reason.trim().length > 0 && reason.length <= MAX_REASON_LENGTH
+
+  const handleConfirm = () => {
+    setTouched(true)
+    if (isValid) {
+      onConfirm(reason.trim())
+      setReason('')
+      setTouched(false)
     }
-    setError(null);
-    await onConfirm(reason.trim());
-    setReason('');
-  };
+  }
 
   const handleCancel = () => {
-    setReason('');
-    setError(null);
-    onCancel();
-  };
-
-  const charsRemaining = MAX_REASON_LENGTH - reason.length;
+    setReason('')
+    setTouched(false)
+    onCancel()
+  }
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="cancel-dialog-title"
-    >
-      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
-        <h2 id="cancel-dialog-title" className="text-xl font-bold text-gray-900 mb-2">
-          ✕ Cancelar Venta / Cancel Sale
-        </h2>
-        <p className="text-gray-600 mb-4">
-          Esta acción no se puede deshacer. / This action cannot be undone.
+    <div className="pos-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="cancel-dialog-title">
+      <div className="pos-modal-panel">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="mb-2 inline-flex rounded-xl bg-red-50 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-red-700 ring-1 ring-red-100">
+              Acción irreversible / Irreversible
+            </div>
+            <h2 id="cancel-dialog-title" className="text-lg font-bold tracking-tight text-slate-900">
+              Cancelar venta / Cancel Sale
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Cerrar / Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <p className="mt-2 text-sm leading-relaxed text-slate-500">
+          Esta acción no se puede deshacer. / This cannot be undone.
         </p>
 
-        {/* ES: Campo de motivo / EN: Reason field */}
-        <div className="mb-4">
-          <label htmlFor="cancel-reason" className="block text-sm font-medium text-gray-700 mb-2">
-            Motivo de cancelación / Cancellation reason <span className="text-red-500">*</span>
+        <div className="mt-5">
+          <label
+            htmlFor="cancel-reason"
+            className="mb-2 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500"
+          >
+            Motivo <span className="text-red-500">*</span>
           </label>
           <textarea
             id="cancel-reason"
             value={reason}
-            onChange={(e) => {
-              if (e.target.value.length <= MAX_REASON_LENGTH) {
-                setReason(e.target.value);
-                setError(null);
-              }
-            }}
-            placeholder="Ingrese el motivo de cancelación / Enter cancellation reason"
+            onChange={(e) => setReason(e.target.value)}
             rows={4}
             maxLength={MAX_REASON_LENGTH}
-            aria-label="Motivo de cancelación / Cancellation reason"
-            aria-describedby="reason-counter"
-            aria-invalid={!!error}
-            className={`w-full px-3 py-2 border rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-red-500 resize-none ${
-              error ? 'border-red-500' : 'border-gray-300'
+            className={`pos-input resize-none ${
+              touched && !isValid ? 'border-red-300 ring-4 ring-red-100' : ''
             }`}
+            placeholder="Motivo... / Reason..."
+            aria-describedby="cancel-reason-count"
+            aria-invalid={touched && !isValid}
           />
-          {/* ES: Contador de caracteres / EN: Character counter */}
           <p
-            id="reason-counter"
-            className={`text-right text-xs mt-1 ${charsRemaining < 20 ? 'text-red-500' : 'text-gray-400'}`}
+            id="cancel-reason-count"
+            className={`mt-1.5 text-right text-xs ${
+              reason.length > MAX_REASON_LENGTH - 24 ? 'font-medium text-amber-600' : 'text-slate-400'
+            }`}
           >
-            {charsRemaining} caracteres restantes / characters remaining
+            {reason.length}/{MAX_REASON_LENGTH}
           </p>
-          {error && (
-            <p className="text-sm text-red-600 mt-1" role="alert">
-              {error}
+          {touched && !reason.trim() && (
+            <p className="mt-1 text-xs text-red-600" role="alert">
+              El motivo es requerido / Reason required
             </p>
           )}
         </div>
 
-        {/* ES: Botones de acción / EN: Action buttons */}
-        <div className="flex gap-3 justify-end">
+        <div className="mt-8 flex flex-wrap justify-end gap-3 border-t border-slate-100 pt-6">
           <button
+            type="button"
             onClick={handleCancel}
             disabled={isLoading}
-            className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px] min-w-[44px]"
-            aria-label="Volver / Go back"
+            className="pos-btn-secondary min-w-[100px]"
           >
             Volver / Back
           </button>
           <button
+            type="button"
             onClick={handleConfirm}
-            disabled={isLoading || !reason.trim()}
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors min-h-[44px] min-w-[44px] disabled:opacity-50"
-            aria-label="Confirmar cancelación / Confirm cancellation"
+            disabled={isLoading}
+            className="min-h-[44px] rounded-xl bg-red-600 px-5 text-sm font-semibold text-white shadow-lg shadow-red-500/25 transition hover:bg-red-500 disabled:opacity-50"
           >
-            {isLoading ? 'Cancelando...' : '✕ Confirmar Cancelación'}
+            {isLoading ? 'Cancelando...' : 'Confirmar'}
           </button>
         </div>
       </div>
     </div>
-  );
+  )
 }

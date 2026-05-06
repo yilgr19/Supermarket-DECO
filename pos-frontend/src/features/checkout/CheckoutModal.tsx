@@ -1,168 +1,178 @@
-// ES: Modal de checkout con toggle Efectivo/Crédito
-// EN: Checkout modal with Cash/Credit toggle
+// ES: Modal de checkout con opciones de pago efectivo y crédito
+// EN: Checkout modal with cash and credit payment options
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCheckout } from './useCheckout';
-import { useSaleStore } from '../../infrastructure/store/saleStore';
-import CashPaymentForm from './CashPaymentForm';
-import CreditPaymentForm from './CreditPaymentForm';
-import ErrorMessage from '../../shared/components/ErrorMessage';
-import type { PaymentType } from '../../core/types/sale.types';
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { X, CreditCard, Banknote } from 'lucide-react'
+import { useCheckout } from './useCheckout'
+import { CashPaymentForm } from './CashPaymentForm'
+import { CreditPaymentForm } from './CreditPaymentForm'
+import { ErrorMessage } from '../../shared/components/ErrorMessage'
+import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
+import type { Customer } from '../../core/types/customer.types'
 
 interface CheckoutModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
+  selectedCustomer: Customer | null
 }
 
-export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
-  const [paymentType, setPaymentType] = useState<PaymentType>('CASH');
-  const [amountReceived, setAmountReceived] = useState(0);
+type PaymentTab = 'CASH' | 'CREDIT'
 
-  const { activeSale, selectedCustomer, clearSale } = useSaleStore();
-  const { isLoading, error, checkoutCash, checkoutCredit, clearError } = useCheckout();
-  const navigate = useNavigate();
+export function CheckoutModal({ isOpen, onClose, selectedCustomer }: CheckoutModalProps) {
+  const navigate = useNavigate()
+  const { activeSale, isLoading, error, clearError, checkoutCash, checkoutCredit } =
+    useCheckout()
+  const [tab, setTab] = useState<PaymentTab>('CASH')
+  const [amountReceived, setAmountReceived] = useState('')
 
-  if (!isOpen || !activeSale) return null;
+  if (!isOpen || !activeSale) return null
 
-  const handlePaymentTypeChange = (type: PaymentType) => {
-    setPaymentType(type);
-    clearError();
-  };
+  const total = activeSale.total
+  const received = parseFloat(amountReceived) || 0
+  const fmt = (n: number) => `$${n.toLocaleString('es-CO')}`
 
-  const handleConfirm = async () => {
-    let receipt = null;
-
-    if (paymentType === 'CASH') {
-      receipt = await checkoutCash(amountReceived);
-    } else {
-      receipt = await checkoutCredit();
-    }
-
+  const handleCash = async () => {
+    const receipt = await checkoutCash(received)
     if (receipt) {
-      clearSale();
-      navigate(`/receipt/${receipt.transactionId}`);
+      navigate(`/receipt/${receipt.transactionId}`)
     }
-  };
+  }
 
-  const handleClose = () => {
-    clearError();
-    onClose();
-  };
+  const handleCredit = async () => {
+    const receipt = await checkoutCredit()
+    if (receipt) {
+      navigate(`/receipt/${receipt.transactionId}`)
+    }
+  }
 
-  const isCreditBlocked =
-    paymentType === 'CREDIT' &&
-    (!selectedCustomer || selectedCustomer.creditStatus !== 'APPROVED');
-
-  const isCashBlocked =
-    paymentType === 'CASH' && amountReceived < activeSale.total;
-
-  const isConfirmDisabled = isLoading || isCreditBlocked || isCashBlocked;
+  const creditBlocked = !selectedCustomer || selectedCustomer.creditStatus !== 'APPROVED'
+  const outOfStockItems = error?.outOfStockItems
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="checkout-title"
-    >
-      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
-        {/* ES: Encabezado / EN: Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 id="checkout-title" className="text-2xl font-bold text-gray-900">
-            💳 Checkout
-          </h2>
+    <div className="pos-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+      <div className="pos-modal-panel max-w-lg">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-violet-500">
+              Checkout
+            </p>
+            <h2 id="checkout-title" className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
+              {fmt(total)}
+            </h2>
+          </div>
           <button
-            onClick={handleClose}
-            disabled={isLoading}
-            className="text-gray-400 hover:text-gray-600 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label="Cerrar checkout / Close checkout"
+            type="button"
+            onClick={() => {
+              clearError()
+              onClose()
+            }}
+            className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100"
+            aria-label="Cerrar / Close"
           >
-            ✕
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* ES: Toggle Efectivo/Crédito / EN: Cash/Credit toggle */}
-        <div className="flex gap-2 mb-6" role="group" aria-label="Método de pago / Payment method">
+        <div className="mt-6 flex rounded-2xl border border-slate-200 bg-slate-100/70 p-1">
           <button
-            onClick={() => handlePaymentTypeChange('CASH')}
-            disabled={isLoading}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors min-h-[44px] ${
-              paymentType === 'CASH'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            } disabled:opacity-50`}
-            aria-pressed={paymentType === 'CASH'}
-            aria-label="Pago en efectivo / Cash payment"
+            type="button"
+            onClick={() => {
+              setTab('CASH')
+              clearError()
+            }}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition ${
+              tab === 'CASH'
+                ? 'bg-white text-indigo-700 shadow-md shadow-slate-200/50'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+            aria-pressed={tab === 'CASH'}
           >
-            💵 Efectivo / Cash
+            <Banknote className="h-4 w-4" />
+            Efectivo
           </button>
           <button
-            onClick={() => handlePaymentTypeChange('CREDIT')}
-            disabled={isLoading}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors min-h-[44px] ${
-              paymentType === 'CREDIT'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            } disabled:opacity-50`}
-            aria-pressed={paymentType === 'CREDIT'}
-            aria-label="Pago a crédito / Credit payment"
+            type="button"
+            onClick={() => {
+              setTab('CREDIT')
+              clearError()
+            }}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition ${
+              tab === 'CREDIT'
+                ? 'bg-white text-indigo-700 shadow-md shadow-slate-200/50'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+            aria-pressed={tab === 'CREDIT'}
           >
-            💳 Crédito / Credit
+            <CreditCard className="h-4 w-4" />
+            Crédito
           </button>
         </div>
 
-        {/* ES: Formulario según método de pago / EN: Form based on payment method */}
-        {paymentType === 'CASH' ? (
-          <CashPaymentForm
-            total={activeSale.total}
-            onAmountChange={setAmountReceived}
-            disabled={isLoading}
-          />
-        ) : (
-          <CreditPaymentForm
-            customer={selectedCustomer}
-            total={activeSale.total}
-          />
-        )}
+        <div className="mt-6">
+          {tab === 'CASH' && (
+            <CashPaymentForm
+              total={total}
+              amountReceived={amountReceived}
+              onAmountReceivedChange={setAmountReceived}
+              fmt={fmt}
+            />
+          )}
 
-        {/* ES: Error de checkout / EN: Checkout error */}
+          {tab === 'CREDIT' && <CreditPaymentForm selectedCustomer={selectedCustomer} />}
+        </div>
+
         {error && (
           <div className="mt-4">
-            <ErrorMessage message={error.message} />
-            {error.outOfStockItems && error.outOfStockItems.length > 0 && (
-              <ul className="mt-2 text-sm text-red-700 bg-red-50 rounded-lg p-3">
-                <p className="font-medium mb-1">Productos sin stock / Out of stock products:</p>
-                {error.outOfStockItems.map((item) => (
-                  <li key={item.productId}>
-                    {item.productName}: {item.availableStock} disponibles / available
-                  </li>
-                ))}
-              </ul>
+            {outOfStockItems && outOfStockItems.length > 0 ? (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <p className="mb-2 text-sm font-semibold text-amber-900">Stock insuficiente</p>
+                <ul className="space-y-1">
+                  {outOfStockItems.map((item) => (
+                    <li key={item.productId} className="text-xs text-amber-800">
+                      {item.productName}: disponible {item.available}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <ErrorMessage message={error.message ?? ''} onRetry={clearError} />
             )}
           </div>
         )}
 
-        {/* ES: Botones de acción / EN: Action buttons */}
-        <div className="flex gap-3 mt-6">
+        <div className="mt-8 flex gap-3 border-t border-slate-100 pt-6">
           <button
-            onClick={handleClose}
+            type="button"
+            onClick={() => {
+              clearError()
+              onClose()
+            }}
             disabled={isLoading}
-            className="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
-            aria-label="Cancelar checkout / Cancel checkout"
+            className="pos-btn-secondary flex-1"
           >
-            Cancelar / Cancel
+            Cerrar
           </button>
           <button
-            onClick={handleConfirm}
-            disabled={isConfirmDisabled}
-            className="flex-1 py-3 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold transition-colors min-h-[44px] disabled:opacity-50"
-            aria-label="Confirmar pago / Confirm payment"
+            type="button"
+            onClick={tab === 'CASH' ? handleCash : handleCredit}
+            disabled={
+              isLoading ||
+              (tab === 'CASH' && received < total) ||
+              (tab === 'CREDIT' && creditBlocked)
+            }
+            className="pos-btn-primary min-h-[46px] flex-1 px-6"
           >
-            {isLoading ? 'Procesando...' : '✓ Confirmar Pago / Confirm Payment'}
+            {isLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <LoadingSpinner size="sm" /> Procesando
+              </span>
+            ) : (
+              'Pagar / Pay'
+            )}
           </button>
         </div>
       </div>
     </div>
-  );
+  )
 }

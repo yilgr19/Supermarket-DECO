@@ -1,97 +1,56 @@
-// ES: Formulario de devolución total
-// EN: Full return form
-
-import React, { useState } from 'react';
-import type { Sale } from '../../core/types/sale.types';
-import ErrorMessage from '../../shared/components/ErrorMessage';
-
-// ES: Formatea precio en pesos colombianos
-// EN: Formats price in Colombian pesos
-function formatCOP(amount: number): string {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    minimumFractionDigits: 0,
-  }).format(amount);
-}
+// ES: Devolución total EN: Full return form segment
 
 interface FullReturnFormProps {
-  sale: Sale;
-  onConfirm: (reason: string) => Promise<void>;
-  isLoading?: boolean;
-  error?: string | null;
+  itemCount: number
+  totalFormatted: string
+  reason: string
+  onReasonChange: (value: string) => void
+  onSubmit: () => void
+  isLoading: boolean
 }
 
-export default function FullReturnForm({ sale, onConfirm, isLoading = false, error }: FullReturnFormProps) {
-  const [reason, setReason] = useState('');
-  const [validationError, setValidationError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reason.trim()) {
-      setValidationError('El motivo es requerido / Reason is required');
-      return;
-    }
-    setValidationError(null);
-    await onConfirm(reason.trim());
-  };
+export function FullReturnForm({
+  itemCount,
+  totalFormatted,
+  reason,
+  onReasonChange,
+  onSubmit,
+  isLoading,
+}: FullReturnFormProps) {
+  const canSubmit = reason.trim().length > 0
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* ES: Resumen de la venta / EN: Sale summary */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h3 className="font-medium text-gray-900 mb-2">
-          Resumen de la Venta / Sale Summary
-        </h3>
-        <p className="text-sm text-gray-600">
-          {sale.items.length} ítem(s) — Total: {formatCOP(sale.total)}
+    <div className="flex flex-col gap-5">
+      <div className="pos-card border-orange-100/80 bg-gradient-to-br from-orange-50/70 to-white">
+        <p className="text-sm leading-relaxed text-slate-600">
+          Se devolverán todos los ítems ({itemCount}) por un total de{' '}
+          <span className="font-bold text-orange-900">{totalFormatted}</span>.
         </p>
-        <ul className="mt-2 text-sm text-gray-500 space-y-1">
-          {sale.items.map((item) => (
-            <li key={item.id}>
-              {item.productName} x{item.quantity} — {formatCOP(item.lineTotal)}
-            </li>
-          ))}
-        </ul>
       </div>
-
-      {/* ES: Campo de motivo / EN: Reason field */}
       <div>
-        <label htmlFor="full-return-reason" className="block text-sm font-medium text-gray-700 mb-2">
-          Motivo de devolución / Return reason <span className="text-red-500">*</span>
+        <label
+          htmlFor="full-reason"
+          className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+        >
+          Motivo / Reason <span className="text-red-500">*</span>
         </label>
         <textarea
-          id="full-return-reason"
+          id="full-reason"
           value={reason}
-          onChange={(e) => {
-            setReason(e.target.value);
-            setValidationError(null);
-          }}
-          placeholder="Ingrese el motivo de la devolución / Enter return reason"
-          rows={3}
-          disabled={isLoading}
-          aria-label="Motivo de devolución / Return reason"
-          aria-invalid={!!validationError}
-          className={`w-full px-3 py-2 border rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none disabled:bg-gray-100 ${
-            validationError ? 'border-red-500' : 'border-gray-300'
-          }`}
+          onChange={(e) => onReasonChange(e.target.value)}
+          rows={4}
+          className="pos-input resize-none"
+          placeholder="Motivo de la devolución..."
         />
-        {validationError && (
-          <p className="text-sm text-red-600 mt-1" role="alert">{validationError}</p>
-        )}
       </div>
-
-      {error && <ErrorMessage message={error} />}
-
-      {/* ES: Botón confirmar / EN: Confirm button */}
       <button
-        type="submit"
-        disabled={isLoading || !reason.trim()}
-        className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-lg transition-colors min-h-[44px] disabled:opacity-50"
-        aria-label="Confirmar devolución total / Confirm full return"
+        type="button"
+        onClick={onSubmit}
+        disabled={isLoading || !canSubmit}
+        className="min-h-[48px] rounded-xl bg-gradient-to-r from-orange-600 to-red-600 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition hover:from-orange-500 hover:to-red-500 disabled:pointer-events-none disabled:opacity-40"
       >
-        {isLoading ? 'Procesando...' : '↩️ Confirmar Devolución Total / Confirm Full Return'}
+        {isLoading ? 'Procesando…' : 'Confirmar devolución total'}
       </button>
-    </form>
-  );
+    </div>
+  )
 }

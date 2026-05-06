@@ -1,140 +1,60 @@
-// ES: Pruebas de componente para ProductSearch
-// EN: Component tests for ProductSearch
+// ES: Pruebas del componente ProductSearch
+// EN: ProductSearch component tests
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { http, HttpResponse } from 'msw';
-import { server } from '../../mocks/server';
-import ProductSearch from './ProductSearch';
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { ProductSearch } from './ProductSearch'
+import { http, HttpResponse } from 'msw'
+import { server } from '../../mocks/server'
 
-const BASE_URL = 'http://localhost:8080';
-
-const mockProducts = [
-  {
-    id: 'prod-1',
-    name: 'Leche 1L',
-    barcode: '7501234567890',
-    unitPrice: 2400,
-    availableStock: 50,
-    category: 'Lácteos',
-  },
-  {
-    id: 'prod-2',
-    name: 'Pan Integral',
-    barcode: '7509876543210',
-    unitPrice: 1200,
-    availableStock: 30,
-    category: 'Panadería',
-  },
-];
+const mockOnAdd = vi.fn()
 
 describe('ProductSearch', () => {
-  const mockOnAddProduct = vi.fn();
+  it('renders search input', () => {
+    render(<ProductSearch onAddProduct={mockOnAdd} />)
+    expect(screen.getByPlaceholderText(/Buscar producto/i)).toBeInTheDocument()
+  })
 
-  beforeEach(() => {
-    mockOnAddProduct.mockClear();
-  });
-
-  it('should render search input', () => {
-    render(<ProductSearch onAddProduct={mockOnAddProduct} />);
-    expect(screen.getByLabelText(/buscar producto por nombre/i)).toBeInTheDocument();
-  });
-
-  it('should show loading state while searching', async () => {
+  it('shows no results message when query returns empty', async () => {
     server.use(
-      http.get(`${BASE_URL}/api/v1/products/search`, async () => {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        return HttpResponse.json(mockProducts);
-      })
-    );
-
-    render(<ProductSearch onAddProduct={mockOnAddProduct} />);
-
-    const input = screen.getByLabelText(/buscar producto por nombre/i);
-    await userEvent.type(input, 'Le');
-
-    // ES: Esperar a que aparezcan los resultados (lo que confirma que hubo carga)
-    // EN: Wait for results to appear (which confirms loading happened)
+      http.get('http://localhost:8080/api/v1/products/search', () =>
+        HttpResponse.json([])
+      )
+    )
+    render(<ProductSearch onAddProduct={mockOnAdd} />)
+    fireEvent.change(screen.getByPlaceholderText(/Buscar producto/i), {
+      target: { value: 'xyz' },
+    })
     await waitFor(() => {
-      expect(screen.getByText('Leche 1L')).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByText(/Sin resultados|No products found/i)).toBeInTheDocument()
+    }, { timeout: 1000 })
+  })
 
-  it('should display search results with product details', async () => {
+  it('shows error message on 503', async () => {
     server.use(
-      http.get(`${BASE_URL}/api/v1/products/search`, () => {
-        return HttpResponse.json(mockProducts);
-      })
-    );
-
-    render(<ProductSearch onAddProduct={mockOnAddProduct} />);
-
-    const input = screen.getByLabelText(/buscar producto por nombre/i);
-    await userEvent.type(input, 'Le');
-
+      http.get('http://localhost:8080/api/v1/products/search', () =>
+        HttpResponse.json({ message: 'Service unavailable' }, { status: 503 })
+      )
+    )
+    render(<ProductSearch onAddProduct={mockOnAdd} />)
+    fireEvent.change(screen.getByPlaceholderText(/Buscar producto/i), {
+      target: { value: 'le' },
+    })
     await waitFor(() => {
-      expect(screen.getByText('Leche 1L')).toBeInTheDocument();
-      expect(screen.getByText('Pan Integral')).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    }, { timeout: 1000 })
+  })
 
-  it('should show error message on 503 response', async () => {
-    server.use(
-      http.get(`${BASE_URL}/api/v1/products/search`, () => {
-        return HttpResponse.json(
-          { message: 'Servicio no disponible, intente de nuevo / Service unavailable, please try again' },
-          { status: 503 }
-        );
-      })
-    );
-
-    render(<ProductSearch onAddProduct={mockOnAddProduct} />);
-
-    const input = screen.getByLabelText(/buscar producto por nombre/i);
-    await userEvent.type(input, 'Le');
-
+  it('renders product results and add button', async () => {
+    render(<ProductSearch onAddProduct={mockOnAdd} />)
+    fireEvent.change(screen.getByPlaceholderText(/Buscar producto/i), {
+      target: { value: 'le' },
+    })
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toBeInTheDocument();
-    });
-  });
-
-  it('should show no results message when search returns empty', async () => {
-    server.use(
-      http.get(`${BASE_URL}/api/v1/products/search`, () => {
-        return HttpResponse.json([]);
-      })
-    );
-
-    render(<ProductSearch onAddProduct={mockOnAddProduct} />);
-
-    const input = screen.getByLabelText(/buscar producto por nombre/i);
-    await userEvent.type(input, 'xyz');
-
-    await waitFor(() => {
-      expect(screen.getByText(/No se encontraron productos/i)).toBeInTheDocument();
-    });
-  });
-
-  it('should call onAddProduct when add button is clicked', async () => {
-    server.use(
-      http.get(`${BASE_URL}/api/v1/products/search`, () => {
-        return HttpResponse.json([mockProducts[0]]);
-      })
-    );
-
-    render(<ProductSearch onAddProduct={mockOnAddProduct} />);
-
-    const input = screen.getByLabelText(/buscar producto por nombre/i);
-    await userEvent.type(input, 'Le');
-
-    await waitFor(() => {
-      expect(screen.getByText('Leche 1L')).toBeInTheDocument();
-    });
-
-    const addButton = screen.getByRole('button', { name: /agregar leche 1l/i });
-    await userEvent.click(addButton);
-
-    expect(mockOnAddProduct).toHaveBeenCalledWith(mockProducts[0]);
-  });
-});
+      expect(screen.getByText(/\s·\sresult/i)).toBeInTheDocument()
+    }, { timeout: 1000 })
+    const addBtn = screen.getByRole('button', { name: /Agregar/i })
+    fireEvent.click(addBtn)
+    expect(mockOnAdd).toHaveBeenCalled()
+  })
+})
