@@ -86,6 +86,21 @@ export function mockGetSale(saleId: string): Sale | null {
   return s ? clone(s) : null
 }
 
+export function mockPatchSaleCustomer(
+  saleId: string,
+  payload: { customerId?: string | null }
+): Sale | null {
+  const sale = sales.get(saleId)
+  if (!sale || sale.status !== 'ACTIVE') return null
+  if (!('customerId' in payload)) {
+    return clone(sale)
+  }
+  const v = payload.customerId
+  sale.customerId = v == null || v === '' ? undefined : v
+  recalc(sale)
+  return clone(sale)
+}
+
 export function mockAddItem(
   saleId: string,
   productId?: string,

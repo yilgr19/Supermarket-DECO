@@ -16,6 +16,10 @@ No hay backend Spring en este repositorio por ahora; el front puede usar **MSW**
 
 Ejemplos del cliente web **Supermercado POS** (Vite dev, tema claro, bilingüe ES/EN).
 
+Las imágenes siguientes apuntan a **`docs/screenshots/login.png`** y **`docs/screenshots/punto-de-venta.png`**. Solo se verán en GitHub cuando **existan en el mismo commit que este README** (sube los PNG, `git add`, `git commit`, `git push`). Si aparecen enlaces rotos en la vista del repo, abre  
+`https://github.com/yilgr19/Supermarket-DECO/raw/main/docs/screenshots/login.png`  
+(sustituye usuario/repo/rama si aplica): un **404** confirma que el archivo **no llegó al remoto** o tiene otro nombre (mayúsculas cuentan en el servidor).
+
 ### Inicio de sesión (`/login`)
 
 ![Pantalla de inicio de sesión — Cajero y terminal](docs/screenshots/login.png)
@@ -28,7 +32,7 @@ Tarjeta centrada sobre fondo en degradado: identificadores de **cajero** y **ter
 
 Cabecera oscura con estado de venta, panel de búsqueda de productos y cliente, área del carrito, totales, descuentos y acciones Congelar / Cancelar / Checkout.
 
-Las imágenes anteriores deben estar en `docs/screenshots/` con los nombres **`login.png`** y **`punto-de-venta.png`**. Si acabas de añadir capturas desde tu máquina, cópielas ahí antes de hacer commit (por ejemplo desde la carpeta de adjuntos del IDE).
+**Incluir en el commit:** desde la raíz del repo, coloca tus dos PNG con esos nombres exactos y ejecuta `git add docs/screenshots/*.png`.
 
 ## Arranque del frontend
 

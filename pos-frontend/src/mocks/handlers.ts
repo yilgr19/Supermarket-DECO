@@ -14,6 +14,7 @@ import {
   mockGetSale,
   mockListFrozen,
   mockPartialReturn,
+  mockPatchSaleCustomer,
   mockRemoveItem,
   mockResume,
   mockUpdateItem,
@@ -93,6 +94,13 @@ export const handlers = [
   http.get(`${BASE}/api/v1/sales/:saleId`, ({ params }) => {
     const sale = mockGetSale(params.saleId as string)
     if (!sale) return HttpResponse.json({ message: 'Sale not found' }, { status: 404 })
+    return HttpResponse.json(sale)
+  }),
+
+  http.patch(`${BASE}/api/v1/sales/:saleId`, async ({ params, request }) => {
+    const payload = (await request.json().catch(() => ({}))) as { customerId?: string | null }
+    const sale = mockPatchSaleCustomer(params.saleId as string, payload)
+    if (!sale) return HttpResponse.json({ message: 'Cannot patch sale' }, { status: 422 })
     return HttpResponse.json(sale)
   }),
 

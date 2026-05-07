@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: pos-sales-api
+  datasource:
+    url: jdbc:h2:mem:posdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+
+server:
+  port: 8080
+
+pos.sales.tax-rate: 0.19
+pos.sales.hold-expiry-hours: 2
+pos.sales.store-name: Supermercado POS
+pos.sales.expiry-check-interval-ms: 60000
+pos.sales.default-terminal-id: TERM-001
+pos.sales.default-cashier-id: CAJERO-DEMO
+
+product.api.base-url: http://localhost:8081
+customer.api.base-url: http://localhost:8082
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging.level.com.pos.sales: INFO

@@ -9,6 +9,8 @@ export function makeSaleUseCases(port: SalePort) {
   return {
     createSale: (terminalId: string, customerId?: string) =>
       port.createSale(terminalId, customerId),
+    patchSaleCustomer: (saleId: string, customerId: string | null) =>
+      port.patchSaleCustomer(saleId, customerId),
     getSale: (saleId: string) => port.getSale(saleId),
     addItemToSale: (
       saleId: string,

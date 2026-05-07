@@ -6,6 +6,8 @@ import type { Receipt } from '../types/receipt.types'
 
 export interface SalePort {
   createSale(terminalId: string, customerId?: string): Promise<Sale>
+  /** Cliente en venta (null limpia). Requerido para crédito contra API real. */
+  patchSaleCustomer(saleId: string, customerId: string | null): Promise<Sale>
   getSale(saleId: string): Promise<Sale>
   addItem(saleId: string, productId: string | undefined, barcode: string | undefined, quantity: number): Promise<Sale>
   updateItem(saleId: string, itemId: string, quantity: number): Promise<Sale>

@@ -11,8 +11,8 @@ import type { Customer } from '../../core/types/customer.types'
 
 interface CustomerSearchProps {
   selectedCustomer: Customer | null
-  onSelectCustomer: (customer: Customer) => void
-  onClearCustomer: () => void
+  onSelectCustomer: (customer: Customer) => void | Promise<void>
+  onClearCustomer: () => void | Promise<void>
 }
 
 export function CustomerSearch({

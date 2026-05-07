@@ -31,6 +31,7 @@ export function SalePage() {
     error,
     clearError,
     createSale,
+    patchSaleCustomer,
     addItemToSale,
     updateItemQuantity,
     removeItem,
@@ -145,8 +146,14 @@ export function SalePage() {
             <h2 className="pos-section-title">Cliente / Customer</h2>
             <CustomerSearch
               selectedCustomer={selectedCustomer}
-              onSelectCustomer={setSelectedCustomer}
-              onClearCustomer={() => setSelectedCustomer(null)}
+              onSelectCustomer={async (customer) => {
+                const updated = await patchSaleCustomer(customer.id)
+                if (updated) setSelectedCustomer(customer)
+              }}
+              onClearCustomer={async () => {
+                const updated = await patchSaleCustomer(null)
+                if (updated) setSelectedCustomer(null)
+              }}
             />
           </section>
         </aside>

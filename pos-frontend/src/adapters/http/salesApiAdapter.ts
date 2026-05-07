@@ -15,6 +15,13 @@ export const salesApiAdapter: SalePort = {
     return response.data
   },
 
+  async patchSaleCustomer(saleId: string, customerId: string | null): Promise<Sale> {
+    const response = await axiosClient.patch<Sale>(`/api/v1/sales/${saleId}`, {
+      customerId,
+    })
+    return response.data
+  },
+
   async getSale(saleId: string): Promise<Sale> {
     const response = await axiosClient.get<Sale>(`/api/v1/sales/${saleId}`)
     return response.data

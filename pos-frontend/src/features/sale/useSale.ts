@@ -32,6 +32,25 @@ export function useSale() {
     }
   }, [terminalId, setActiveSale, handleError, clearError])
 
+  const patchSaleCustomer = useCallback(
+    async (customerId: string | null) => {
+      if (!activeSale) return undefined
+      setIsLoading(true)
+      clearError()
+      try {
+        const updated = await saleUc.patchSaleCustomer(activeSale.id, customerId)
+        setActiveSale(updated)
+        return updated
+      } catch (err) {
+        handleError(err)
+        return undefined
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [activeSale, setActiveSale, handleError, clearError]
+  )
+
   const addItemToSale = useCallback(
     async (productId?: string, barcode?: string, quantity = 1) => {
       if (!activeSale) return
@@ -173,6 +192,7 @@ export function useSale() {
     error,
     clearError,
     createSale,
+    patchSaleCustomer,
     addItemToSale,
     updateItemQuantity,
     removeItem,
