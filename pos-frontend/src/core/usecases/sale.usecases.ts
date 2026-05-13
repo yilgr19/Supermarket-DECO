@@ -21,8 +21,12 @@ export function makeSaleUseCases(port: SalePort) {
     updateItemQuantity: (saleId: string, itemId: string, quantity: number) =>
       port.updateItem(saleId, itemId, quantity),
     removeItem: (saleId: string, itemId: string) => port.removeItem(saleId, itemId),
-    applyDiscount: (saleId: string, type: DiscountType, value: number) =>
-      port.applyDiscount(saleId, type, value),
+    applyItemDiscount: (
+      saleId: string,
+      itemId: string,
+      type: DiscountType,
+      value: number
+    ) => port.applyItemDiscount(saleId, itemId, type, value),
     freezeSale: (saleId: string) => port.freeze(saleId),
     resumeSale: (saleId: string) => port.resume(saleId),
     cancelSale: (saleId: string, reason: string) => port.cancel(saleId, reason),

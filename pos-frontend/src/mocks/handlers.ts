@@ -4,7 +4,7 @@
 import { http, HttpResponse } from 'msw'
 import {
   mockAddItem,
-  mockApplyDiscount,
+  mockApplyItemDiscount,
   mockCancel,
   mockCheckout,
   mockCreateSale,
@@ -160,13 +160,14 @@ export const handlers = [
     return HttpResponse.json(sale)
   }),
 
-  http.post(`${BASE}/api/v1/sales/:saleId/discount`, async ({ params, request }) => {
+  http.post(`${BASE}/api/v1/sales/:saleId/items/:itemId/discount`, async ({ params, request }) => {
     const body = (await request.json()) as {
       discountType: string
       discountValue: number
     }
-    const sale = mockApplyDiscount(
+    const sale = mockApplyItemDiscount(
       params.saleId as string,
+      params.itemId as string,
       body.discountType,
       Number(body.discountValue)
     )

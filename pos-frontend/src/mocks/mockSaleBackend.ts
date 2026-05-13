@@ -38,21 +38,37 @@ function resolveProduct(
   return { pid: 'unknown', name: 'Producto', price: 1000 }
 }
 
-function recalc(sale: Sale): void {
-  const subtotal = sale.items.reduce((s, i) => s + i.lineTotal, 0)
-  const tax = Math.round(subtotal * TAX)
-  let discountAmt = 0
-  const dt = sale.discountType
-  const dv = sale.discountValue
+function lineDiscountAmount(item: SaleItem): number {
+  const gross = Math.round(item.unitPrice * item.quantity)
+  const dt = item.discountType
+  const dv = item.discountValue
   if (dt === 'PERCENTAGE' && dv != null && dv > 0) {
-    discountAmt = Math.round(subtotal * (dv / 100))
-  } else if (dt === 'FIXED_AMOUNT' && dv != null) {
-    discountAmt = dv === 0 ? 0 : Math.max(0, dv)
+    return Math.round(gross * (dv / 100))
   }
+  if (dt === 'FIXED_AMOUNT' && dv != null && dv > 0) {
+    return Math.min(Math.round(dv), gross)
+  }
+  return 0
+}
+
+function refreshLine(item: SaleItem): void {
+  const gross = item.unitPrice * item.quantity
+  const discount = lineDiscountAmount(item)
+  item.discount = discount
+  item.lineTotal = gross - discount
+}
+
+function recalc(sale: Sale): void {
+  sale.items.forEach(refreshLine)
+  const subtotal = sale.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0)
+  const tax = Math.round(subtotal * TAX)
+  const discountAmt = sale.items.reduce((s, i) => s + (i.discount ?? 0), 0)
   sale.subtotal = subtotal
   sale.tax = tax
   sale.discount = discountAmt
   sale.total = Math.max(0, subtotal + tax - discountAmt)
+  delete sale.discountType
+  delete sale.discountValue
   sale.updatedAt = new Date().toISOString()
 }
 
@@ -114,7 +130,7 @@ export function mockAddItem(
   let item = sale.items.find((i) => i.productId === prod.pid)
   if (item) {
     item.quantity += q
-    item.lineTotal = item.unitPrice * item.quantity
+    refreshLine(item)
   } else {
     item = {
       id: `item-${itemSeq++}`,
@@ -123,8 +139,10 @@ export function mockAddItem(
       unitPrice: prod.price,
       quantity: q,
       lineTotal: prod.price * q,
+      discount: 0,
     }
     sale.items.push(item)
+    refreshLine(item)
   }
   recalc(sale)
   return clone(sale)
@@ -137,7 +155,7 @@ export function mockUpdateItem(saleId: string, itemId: string, quantity: number)
   const item = sale.items.find((i) => i.id === itemId)
   if (!item) return null
   item.quantity = q
-  item.lineTotal = item.unitPrice * q
+  refreshLine(item)
   recalc(sale)
   return clone(sale)
 }
@@ -150,19 +168,23 @@ export function mockRemoveItem(saleId: string, itemId: string): Sale | null {
   return clone(sale)
 }
 
-export function mockApplyDiscount(
+export function mockApplyItemDiscount(
   saleId: string,
+  itemId: string,
   discountType: string,
   discountValue: number
 ): Sale | null {
   const sale = sales.get(saleId)
   if (!sale || sale.status !== 'ACTIVE') return null
+  const item = sale.items.find((i) => i.id === itemId)
+  if (!item) return null
   if (discountType === 'FIXED_AMOUNT' && discountValue === 0) {
-    delete sale.discountType
-    delete sale.discountValue
+    delete item.discountType
+    delete item.discountValue
+    item.discount = 0
   } else {
-    sale.discountType = discountType as Sale['discountType']
-    sale.discountValue = discountValue
+    item.discountType = discountType as SaleItem['discountType']
+    item.discountValue = discountValue
   }
   recalc(sale)
   return clone(sale)

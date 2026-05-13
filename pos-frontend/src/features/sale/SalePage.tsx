@@ -3,15 +3,13 @@
 
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Snowflake, XCircle, ShoppingBag, LogOut, List, Package } from 'lucide-react'
+import { Snowflake, XCircle, ShoppingBag, LogOut, List, Package, Search, UserSearch, UserCheck } from 'lucide-react'
 import { useSale } from './useSale'
 import { CartPanel } from './CartPanel'
 import { TotalsSummary } from './TotalsSummary'
-import { DiscountForm } from './DiscountForm'
 import { CancelDialog } from './CancelDialog'
-import { ProductSearch } from '../products/ProductSearch'
-import { BarcodeScanner } from '../products/BarcodeScanner'
-import { CustomerSearch } from '../customers/CustomerSearch'
+import { ProductSearchModal } from '../products/ProductSearchModal'
+import { CustomerSearchModal } from '../customers/CustomerSearchModal'
 import { CheckoutModal } from '../checkout/CheckoutModal'
 import { SaleStatusBadge } from '../../shared/components/StatusBadge'
 import { ErrorMessage } from '../../shared/components/ErrorMessage'
@@ -35,17 +33,17 @@ export function SalePage() {
     addItemToSale,
     updateItemQuantity,
     removeItem,
-    applyDiscount,
+    applyItemDiscount,
     freezeSale,
     cancelSale,
   } = useSale()
 
   const [showCancelDialog, setShowCancelDialog] = useState(false)
   const [showCheckout, setShowCheckout] = useState(false)
-  const [discountError, setDiscountError] = useState<string | null>(null)
+  const [showProductSearch, setShowProductSearch] = useState(false)
+  const [showCustomerSearch, setShowCustomerSearch] = useState(false)
+  const [discountErrorItemId, setDiscountErrorItemId] = useState<string | null>(null)
 
-  // ES: Crear venta automáticamente al montar si no hay una activa
-  // EN: Auto-create sale on mount if none is active
   useEffect(() => {
     if (!activeSale && terminalId) {
       void createSale()
@@ -60,14 +58,15 @@ export function SalePage() {
     await addItemToSale(product.id, undefined, 1)
   }
 
-  const handleApplyDiscount = async (type: DiscountType, value: number) => {
-    setDiscountError(null)
-    const result = await applyDiscount(type, value)
-    if (!result) setDiscountError(error?.message ?? 'Error al aplicar descuento')
+  const handleApplyItemDiscount = async (itemId: string, type: DiscountType, value: number) => {
+    setDiscountErrorItemId(null)
+    const result = await applyItemDiscount(itemId, type, value)
+    if (!result) setDiscountErrorItemId(itemId)
   }
 
-  const handleRemoveDiscount = async () => {
-    await applyDiscount('FIXED_AMOUNT', 0)
+  const handleRemoveItemDiscount = async (itemId: string) => {
+    setDiscountErrorItemId(null)
+    await applyItemDiscount(itemId, 'FIXED_AMOUNT', 0)
   }
 
   const handleFreeze = async () => {
@@ -90,7 +89,6 @@ export function SalePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* ES: Header / EN: Header */}
       <header className="sticky top-0 z-40 border-b border-white/10 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-4 py-3.5 text-white shadow-pos-lg">
         <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -138,121 +136,154 @@ export function SalePage() {
         </div>
       </header>
 
-      {/* ES: Contenido principal / EN: Main content */}
-      <main className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-4 p-4 lg:flex-row lg:gap-5">
-        {/* ES: Panel izquierdo: búsqueda / EN: Left panel: search */}
-        <aside className="flex flex-col gap-4 lg:w-80 xl:w-96 lg:shrink-0">
-          <section className="pos-card !p-4 sm:!p-5">
-            <h2 className="pos-section-title">Productos / Products</h2>
-            <ProductSearch onAddProduct={handleAddProduct} />
-            <div className="mt-3">
-              <BarcodeScanner onProductFound={handleBarcodeProduct} />
-            </div>
-          </section>
+      <main className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-3 p-4">
+        <div className="pos-action-bar">
+          <button
+            type="button"
+            onClick={() => setShowProductSearch(true)}
+            disabled={!isActive || isLoading}
+            className="pos-action-btn pos-action-btn--product"
+          >
+            <span className="pos-action-btn__icon" aria-hidden="true">
+              <Search className="h-4 w-4" />
+            </span>
+            <span className="min-w-0">
+              <span className="pos-action-btn__label">Buscar producto</span>
+              <span className="pos-action-btn__hint">Search product</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowCustomerSearch(true)}
+            disabled={!isActive || isLoading}
+            className="pos-action-btn pos-action-btn--customer"
+          >
+            <span className="pos-action-btn__icon" aria-hidden="true">
+              <UserSearch className="h-4 w-4" />
+            </span>
+            <span className="min-w-0">
+              <span className="pos-action-btn__label">Buscar cliente</span>
+              <span className="pos-action-btn__hint">Search customer</span>
+            </span>
+          </button>
+          {selectedCustomer && (
+            <button
+              type="button"
+              onClick={() => setShowCustomerSearch(true)}
+              className="pos-customer-chip"
+            >
+              <span className="pos-customer-chip__icon" aria-hidden="true">
+                <UserCheck className="h-4 w-4" />
+              </span>
+              <span className="min-w-0">
+                <span className="pos-customer-chip__name">{selectedCustomer.fullName}</span>
+                <span className="pos-customer-chip__meta">
+                  {selectedCustomer.documentType}: {selectedCustomer.documentNumber}
+                </span>
+              </span>
+            </button>
+          )}
+        </div>
 
-          <section className="pos-card !p-4 sm:!p-5">
-            <h2 className="pos-section-title">Cliente / Customer</h2>
-            <CustomerSearch
-              selectedCustomer={selectedCustomer}
-              onSelectCustomer={async (customer) => {
-                const updated = await patchSaleCustomer(customer.id)
-                if (updated) setSelectedCustomer(customer)
-              }}
-              onClearCustomer={async () => {
-                const updated = await patchSaleCustomer(null)
-                if (updated) setSelectedCustomer(null)
+        <section className="pos-card flex min-h-0 flex-1 flex-col">
+          <h2 className="pos-section-title">Carrito / Cart</h2>
+
+          {isLoading && !activeSale && (
+            <div className="flex justify-center py-8">
+              <LoadingSpinner label="Creando venta..." />
+            </div>
+          )}
+
+          {error && !isLoading && (
+            <ErrorMessage
+              message={error.message ?? ''}
+              onRetry={() => {
+                clearError()
+                void createSale()
               }}
             />
-          </section>
-        </aside>
+          )}
 
-        {/* ES: Panel derecho: carrito / EN: Right panel: cart */}
-        <section className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="pos-card flex-1">
-            <h2 className="pos-section-title">Carrito / Cart</h2>
-
-            {isLoading && !activeSale && (
-              <div className="flex justify-center py-8">
-                <LoadingSpinner label="Creando venta..." />
-              </div>
-            )}
-
-            {error && !isLoading && (
-              <ErrorMessage
-                message={error.message ?? ''}
-                onRetry={() => {
-                  clearError()
-                  void createSale()
-                }}
-              />
-            )}
-
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <CartPanel
               sale={activeSale}
               isLoading={isLoading}
               stockError={error?.outOfStockItems ?? null}
+              discountErrorItemId={discountErrorItemId}
+              discountErrorMessage={error?.message ?? null}
               onUpdateQuantity={updateItemQuantity}
               onRemoveItem={removeItem}
+              onApplyItemDiscount={handleApplyItemDiscount}
+              onRemoveItemDiscount={handleRemoveItemDiscount}
             />
           </div>
+        </section>
 
-          {activeSale && (
-            <>
-              <TotalsSummary sale={activeSale} />
+        {activeSale && (
+          <>
+            <TotalsSummary sale={activeSale} />
 
+            <div className="flex flex-wrap gap-3">
               {isActive && (
-                <DiscountForm
-                  hasDiscount={(activeSale.discount ?? 0) > 0}
-                  isLoading={isLoading}
-                  error={discountError}
-                  onApply={handleApplyDiscount}
-                  onRemove={handleRemoveDiscount}
-                />
+                <button
+                  onClick={handleFreeze}
+                  disabled={isLoading}
+                  type="button"
+                  className="pos-btn-freeze disabled:opacity-50"
+                >
+                  <Snowflake className="h-4 w-4" aria-hidden="true" />
+                  Congelar / Freeze
+                </button>
               )}
 
-              {/* ES: Barra de acciones / EN: Action bar */}
-              <div className="flex flex-wrap gap-3">
-                {isActive && (
-                  <button
-                    onClick={handleFreeze}
-                    disabled={isLoading}
-                    type="button"
-                    className="pos-btn-freeze disabled:opacity-50"
-                  >
-                    <Snowflake className="h-4 w-4" aria-hidden="true" />
-                    Congelar / Freeze
-                  </button>
-                )}
+              {isFrozenOrActive && (
+                <button
+                  onClick={() => setShowCancelDialog(true)}
+                  disabled={isLoading}
+                  type="button"
+                  className="pos-btn-danger flex-1 disabled:opacity-50"
+                >
+                  <XCircle className="h-4 w-4" aria-hidden="true" />
+                  Cancelar / Cancel
+                </button>
+              )}
 
-                {isFrozenOrActive && (
-                  <button
-                    onClick={() => setShowCancelDialog(true)}
-                    disabled={isLoading}
-                    type="button"
-                    className="pos-btn-danger flex-1 disabled:opacity-50"
-                  >
-                    <XCircle className="h-4 w-4" aria-hidden="true" />
-                    Cancelar / Cancel
-                  </button>
-                )}
-
-                {isActive && (
-                  <button
-                    onClick={() => setShowCheckout(true)}
-                    disabled={isLoading || activeSale.items.length === 0}
-                    type="button"
-                    className="pos-btn-primary min-w-[140px] flex-1 shadow-indigo-500/20 disabled:opacity-50"
-                  >
-                    Checkout
-                  </button>
-                )}
-              </div>
-            </>
-          )}
-        </section>
+              {isActive && (
+                <button
+                  onClick={() => setShowCheckout(true)}
+                  disabled={isLoading || activeSale.items.length === 0}
+                  type="button"
+                  className="pos-btn-primary min-w-[140px] flex-1 shadow-indigo-500/20 disabled:opacity-50"
+                >
+                  Checkout
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </main>
 
-      {/* ES: Modales / EN: Modals */}
+      <ProductSearchModal
+        isOpen={showProductSearch}
+        onClose={() => setShowProductSearch(false)}
+        onAddProduct={handleAddProduct}
+        onBarcodeProduct={handleBarcodeProduct}
+      />
+
+      <CustomerSearchModal
+        isOpen={showCustomerSearch}
+        onClose={() => setShowCustomerSearch(false)}
+        selectedCustomer={selectedCustomer}
+        onSelectCustomer={async (customer) => {
+          const updated = await patchSaleCustomer(customer.id)
+          if (updated) setSelectedCustomer(customer)
+        }}
+        onClearCustomer={async () => {
+          const updated = await patchSaleCustomer(null)
+          if (updated) setSelectedCustomer(null)
+        }}
+      />
+
       <CancelDialog
         isOpen={showCancelDialog}
         isLoading={isLoading}

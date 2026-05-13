@@ -5,23 +5,31 @@ import { useState } from 'react'
 import { ShoppingCart } from 'lucide-react'
 import { CartItemRow } from './CartItem'
 import type { Sale, SaleItem } from '../../core/types/sale.types'
-import type { OutOfStockItem } from '../../core/types/sale.types'
+import type { DiscountType, OutOfStockItem } from '../../core/types/sale.types'
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog'
 
 interface CartPanelProps {
   sale: Sale | null
   isLoading: boolean
   stockError: OutOfStockItem[] | null
+  discountErrorItemId: string | null
+  discountErrorMessage: string | null
   onUpdateQuantity: (itemId: string, quantity: number) => void
   onRemoveItem: (itemId: string) => void
+  onApplyItemDiscount: (itemId: string, type: DiscountType, value: number) => void
+  onRemoveItemDiscount: (itemId: string) => void
 }
 
 export function CartPanel({
   sale,
   isLoading,
   stockError,
+  discountErrorItemId,
+  discountErrorMessage,
   onUpdateQuantity,
   onRemoveItem,
+  onApplyItemDiscount,
+  onRemoveItemDiscount,
 }: CartPanelProps) {
   const [itemPendingRemove, setItemPendingRemove] = useState<SaleItem | null>(null)
 
@@ -73,8 +81,14 @@ export function CartPanel({
               key={item.id}
               item={item}
               isEditable={isEditable && !isLoading}
+              isLoading={isLoading}
+              discountError={
+                discountErrorItemId === item.id ? discountErrorMessage : null
+              }
               onUpdateQuantity={onUpdateQuantity}
               onRequestRemove={(line) => setItemPendingRemove(line)}
+              onApplyDiscount={(type, value) => onApplyItemDiscount(item.id, type, value)}
+              onRemoveDiscount={() => onRemoveItemDiscount(item.id)}
             />
           ))}
         </ul>

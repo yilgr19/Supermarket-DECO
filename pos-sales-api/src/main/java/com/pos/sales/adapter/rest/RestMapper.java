@@ -41,13 +41,17 @@ public final class RestMapper {
     }
 
     private static SaleLineDto toLine(SaleLineEntity l) {
+        Double discountVal = l.getDiscountValue() != null ? l.getDiscountValue().doubleValue() : null;
         return new SaleLineDto(
                 l.getId().toString(),
                 l.getProductId(),
                 l.getProductName(),
                 l.getUnitPrice().doubleValue(),
                 l.getQuantity(),
-                l.getLineTotal().doubleValue()
+                l.getLineTotal().doubleValue(),
+                l.getDiscountAmount().doubleValue(),
+                l.getDiscountType() != null ? l.getDiscountType().name() : null,
+                discountVal
         );
     }
 

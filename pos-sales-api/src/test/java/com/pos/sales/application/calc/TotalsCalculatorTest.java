@@ -20,7 +20,7 @@ class TotalsCalculatorTest {
     @Test
     void computeDiscountCents_percentage() {
         long sub = 10000;
-        assertThat(TotalsCalculator.computeDiscountCents(sub, DiscountType.PERCENTAGE, bd(10)))
+        assertThat(TotalsCalculator.computeDiscountCents(sub, DiscountType.PERCENTAGE, bd("10")))
                 .isEqualTo(1000); // 10 %
     }
 
@@ -35,7 +35,20 @@ class TotalsCalculatorTest {
         return new BigDecimal(v);
     }
 
-    static BigDecimal bd(long v) {
-        return BigDecimal.valueOf(v);
+    @Test
+    void recalculate_aggregatesLineDiscounts() {
+        var sale = new com.pos.sales.domain.model.SaleEntity();
+        var line = new com.pos.sales.domain.model.SaleLineEntity();
+        line.setUnitPrice(bd("100.00"));
+        line.setQuantity(2);
+        line.setDiscountType(DiscountType.PERCENTAGE);
+        line.setDiscountValue(bd("10"));
+        sale.getLines().add(line);
+
+        calc.recalculate(sale);
+
+        assertThat(sale.getSubtotal()).isEqualByComparingTo(bd("200.00"));
+        assertThat(sale.getDiscountAmount()).isEqualByComparingTo(bd("20.00"));
+        assertThat(line.getLineTotal()).isEqualByComparingTo(bd("180.00"));
     }
 }

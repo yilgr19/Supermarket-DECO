@@ -56,11 +56,19 @@ export const salesApiAdapter: SalePort = {
     return response.data
   },
 
-  async applyDiscount(saleId: string, type: DiscountType, value: number): Promise<Sale> {
-    const response = await axiosClient.post<Sale>(`/api/v1/sales/${saleId}/discount`, {
-      discountType: type,
-      discountValue: value,
-    })
+  async applyItemDiscount(
+    saleId: string,
+    itemId: string,
+    type: DiscountType,
+    value: number
+  ): Promise<Sale> {
+    const response = await axiosClient.post<Sale>(
+      `/api/v1/sales/${saleId}/items/${itemId}/discount`,
+      {
+        discountType: type,
+        discountValue: value,
+      }
+    )
     return response.data
   },
 

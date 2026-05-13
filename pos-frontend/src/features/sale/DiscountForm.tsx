@@ -1,5 +1,5 @@
-// ES: Formulario para aplicar descuentos a la venta
-// EN: Form to apply discounts to the sale
+// ES: Formulario para aplicar descuentos por línea
+// EN: Form to apply line-item discounts
 
 import { useState } from 'react'
 import { Tag, X } from 'lucide-react'
@@ -7,6 +7,7 @@ import { ErrorMessage } from '../../shared/components/ErrorMessage'
 import type { DiscountType } from '../../core/types/sale.types'
 
 interface DiscountFormProps {
+  compact?: boolean
   hasDiscount: boolean
   isLoading: boolean
   error: string | null
@@ -15,6 +16,7 @@ interface DiscountFormProps {
 }
 
 export function DiscountForm({
+  compact = false,
   hasDiscount,
   isLoading,
   error,
@@ -33,13 +35,21 @@ export function DiscountForm({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200/90 bg-white/90 p-4 shadow-inner shadow-slate-100/80">
-      <div className="mb-3 flex items-center gap-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-600 ring-1 ring-violet-100">
-          <Tag className="h-4 w-4" aria-hidden="true" />
+    <div
+      className={
+        compact
+          ? 'rounded-xl border border-slate-200/90 bg-slate-50/80 p-3'
+          : 'rounded-2xl border border-slate-200/90 bg-white/90 p-4 shadow-inner shadow-slate-100/80'
+      }
+    >
+      {!compact && (
+        <div className="mb-3 flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-600 ring-1 ring-violet-100">
+            <Tag className="h-4 w-4" aria-hidden="true" />
+          </div>
+          <span className="text-sm font-semibold text-slate-800">Descuento / Discount</span>
         </div>
-        <span className="text-sm font-semibold text-slate-800">Descuento / Discount</span>
-      </div>
+      )}
 
       {hasDiscount ? (
         <button

@@ -19,6 +19,9 @@ export interface SaleItem {
   unitPrice: number
   quantity: number
   lineTotal: number
+  discount?: number
+  discountType?: DiscountType
+  discountValue?: number
 }
 
 export interface Sale {

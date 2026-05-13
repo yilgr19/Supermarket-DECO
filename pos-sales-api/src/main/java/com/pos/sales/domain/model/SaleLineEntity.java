@@ -36,6 +36,16 @@ public class SaleLineEntity {
     @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal lineTotal;
 
+    @Column(nullable = false, precision = 14, scale = 2)
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 32)
+    private DiscountType discountType;
+
+    @Column(precision = 14, scale = 2)
+    private BigDecimal discountValue;
+
     public UUID getId() {
         return id;
     }
@@ -98,6 +108,30 @@ public class SaleLineEntity {
 
     public void setLineTotal(BigDecimal lineTotal) {
         this.lineTotal = lineTotal;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public DiscountType getDiscountType() {
+        return discountType;
+    }
+
+    public void setDiscountType(DiscountType discountType) {
+        this.discountType = discountType;
+    }
+
+    public BigDecimal getDiscountValue() {
+        return discountValue;
+    }
+
+    public void setDiscountValue(BigDecimal discountValue) {
+        this.discountValue = discountValue;
     }
 
     /** Unidades disponibles para devolver */

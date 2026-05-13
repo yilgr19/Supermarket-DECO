@@ -5,5 +5,8 @@ public record SaleLineDto(String id,
                           String productName,
                           double unitPrice,
                           int quantity,
-                          double lineTotal) {
+                          double lineTotal,
+                          double discount,
+                          String discountType,
+                          Double discountValue) {
 }

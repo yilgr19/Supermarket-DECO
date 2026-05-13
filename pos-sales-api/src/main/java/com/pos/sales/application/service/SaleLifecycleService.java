@@ -133,19 +133,21 @@ public class SaleLifecycleService {
     }
 
     @Transactional
-    public SaleEntity applyDiscount(UUID saleId, DiscountType discountType, BigDecimal discountValue) {
+    public SaleEntity applyLineDiscount(UUID saleId, UUID lineId, DiscountType discountType, BigDecimal discountValue) {
         SaleEntity sale = getSaleWrite(saleId);
         ensureState(sale, SaleStatus.ACTIVE);
+        SaleLineEntity line = findLine(sale, lineId);
 
         if (discountType == DiscountType.FIXED_AMOUNT && discountValue != null && discountValue.compareTo(BigDecimal.ZERO) == 0) {
-            sale.setDiscountType(null);
-            sale.setDiscountValue(null);
+            line.setDiscountType(null);
+            line.setDiscountValue(null);
+            line.setDiscountAmount(BigDecimal.ZERO);
             totalsCalculator.recalculate(sale);
             return saleRepository.save(sale);
         }
-        totalsCalculator.validateDiscount(sale, discountType, discountValue);
-        sale.setDiscountType(discountType);
-        sale.setDiscountValue(discountValue);
+        totalsCalculator.validateLineDiscount(line, discountType, discountValue);
+        line.setDiscountType(discountType);
+        line.setDiscountValue(discountValue);
         totalsCalculator.recalculate(sale);
         return saleRepository.save(sale);
     }

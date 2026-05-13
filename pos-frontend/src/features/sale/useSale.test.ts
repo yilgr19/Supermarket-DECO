@@ -158,15 +158,20 @@ describe('useSale', () => {
     expect(useSaleStore.getState().activeSale?.items).toHaveLength(0);
   });
 
-  it('should apply a discount', async () => {
+  it('should apply a line discount', async () => {
     useSaleStore.setState({ activeSale: mockSaleWithItems });
 
     server.use(
-      http.post(`${BASE_URL}/api/v1/sales/sale-1/discount`, () => {
+      http.post(`${BASE_URL}/api/v1/sales/sale-1/items/item-1/discount`, () => {
         return HttpResponse.json({
           ...mockSaleWithItems,
           discount: 500,
           total: 5212,
+          items: mockSaleWithItems.items.map((item) =>
+            item.id === 'item-1'
+              ? { ...item, discount: 500, lineTotal: item.unitPrice * item.quantity - 500 }
+              : item
+          ),
         });
       })
     );
@@ -174,7 +179,7 @@ describe('useSale', () => {
     const { result } = renderHook(() => useSale());
 
     await act(async () => {
-      await result.current.applyDiscount('FIXED_AMOUNT', 500);
+      await result.current.applyItemDiscount('item-1', 'FIXED_AMOUNT', 500);
     });
 
     expect(useSaleStore.getState().activeSale?.discount).toBe(500);

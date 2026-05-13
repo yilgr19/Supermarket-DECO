@@ -61,6 +61,65 @@
     @apply hover:border-indigo-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-200 focus-visible:ring-offset-2 disabled:opacity-40;
   }
 
+  .pos-action-bar {
+    @apply flex flex-wrap items-stretch gap-3;
+  }
+
+  .pos-action-btn {
+    @apply relative inline-flex min-h-[3.5rem] min-w-[min(100%,14rem)] flex-1 items-center gap-3.5 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-3.5 text-left shadow-pos backdrop-blur-sm transition duration-200;
+    @apply hover:-translate-y-px hover:border-violet-200/90 hover:bg-white hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-200 focus-visible:ring-offset-2 active:translate-y-0 disabled:pointer-events-none disabled:opacity-45;
+  }
+
+  .pos-action-btn::before {
+    content: '';
+    @apply pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-2xl bg-gradient-to-b opacity-90;
+  }
+
+  .pos-action-btn--product::before {
+    @apply from-violet-500 to-indigo-500;
+  }
+
+  .pos-action-btn--customer::before {
+    @apply from-sky-500 to-cyan-500;
+  }
+
+  .pos-action-btn__icon {
+    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md ring-1 ring-white/20;
+  }
+
+  .pos-action-btn--product .pos-action-btn__icon {
+    @apply bg-gradient-to-br from-violet-500 to-indigo-600 shadow-indigo-500/25;
+  }
+
+  .pos-action-btn--customer .pos-action-btn__icon {
+    @apply bg-gradient-to-br from-sky-500 to-cyan-600 shadow-sky-500/25;
+  }
+
+  .pos-action-btn__label {
+    @apply block truncate text-sm font-semibold tracking-tight text-slate-900;
+  }
+
+  .pos-action-btn__hint {
+    @apply mt-0.5 block text-xs font-medium text-slate-500;
+  }
+
+  .pos-customer-chip {
+    @apply ml-auto inline-flex min-h-[3.5rem] max-w-full items-center gap-3 rounded-2xl border border-emerald-200/80 bg-gradient-to-r from-emerald-50 via-white to-white px-4 py-2.5 text-left shadow-pos transition duration-200;
+    @apply hover:-translate-y-px hover:border-emerald-300 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 focus-visible:ring-offset-2 active:translate-y-0;
+  }
+
+  .pos-customer-chip__icon {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200/60;
+  }
+
+  .pos-customer-chip__name {
+    @apply block truncate text-sm font-semibold text-slate-900;
+  }
+
+  .pos-customer-chip__meta {
+    @apply mt-0.5 block truncate text-xs text-slate-500;
+  }
+
   .pos-modal-backdrop {
     @apply fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 backdrop-blur-sm;
   }

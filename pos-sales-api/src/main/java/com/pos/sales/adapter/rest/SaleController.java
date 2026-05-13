@@ -93,11 +93,13 @@ public class SaleController {
         return RestMapper.toSale(saleLifecycleService.removeLine(saleId, itemId));
     }
 
-    @PostMapping("/{saleId}/discount")
-    public SaleDto discount(@PathVariable UUID saleId, @Valid @RequestBody ApplyDiscountRequest body) {
+    @PostMapping("/{saleId}/items/{itemId}/discount")
+    public SaleDto applyLineDiscount(@PathVariable UUID saleId,
+                                     @PathVariable UUID itemId,
+                                     @Valid @RequestBody ApplyDiscountRequest body) {
         BigDecimal dv = body.discountValue();
         DiscountType dt = body.discountType();
-        return RestMapper.toSale(saleLifecycleService.applyDiscount(saleId, dt, dv));
+        return RestMapper.toSale(saleLifecycleService.applyLineDiscount(saleId, itemId, dt, dv));
     }
 
     @PostMapping("/{saleId}/freeze")

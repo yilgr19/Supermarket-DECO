@@ -35,41 +35,41 @@ const mockSale: Sale = {
   discount: 0,
   total: 7140,
   createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 }
 
 describe('CartPanel', () => {
   const mockOnUpdateQuantity = vi.fn()
   const mockOnRemoveItem = vi.fn()
+  const mockOnApplyItemDiscount = vi.fn()
+  const mockOnRemoveItemDiscount = vi.fn()
+
+  const baseProps = {
+    isLoading: false,
+    stockError: null,
+    discountErrorItemId: null,
+    discountErrorMessage: null,
+    onUpdateQuantity: mockOnUpdateQuantity,
+    onRemoveItem: mockOnRemoveItem,
+    onApplyItemDiscount: mockOnApplyItemDiscount,
+    onRemoveItemDiscount: mockOnRemoveItemDiscount,
+  }
 
   beforeEach(() => {
     mockOnUpdateQuantity.mockClear()
     mockOnRemoveItem.mockClear()
+    mockOnApplyItemDiscount.mockClear()
+    mockOnRemoveItemDiscount.mockClear()
   })
 
   it('should show empty cart message when no items', () => {
-    render(
-      <CartPanel
-        sale={null}
-        isLoading={false}
-        stockError={null}
-        onUpdateQuantity={mockOnUpdateQuantity}
-        onRemoveItem={mockOnRemoveItem}
-      />
-    )
+    render(<CartPanel sale={null} {...baseProps} />)
 
     expect(screen.getByText(/Carrito vacío/i)).toBeInTheDocument()
   })
 
   it('should render cart items', () => {
-    render(
-      <CartPanel
-        sale={mockSale}
-        isLoading={false}
-        stockError={null}
-        onUpdateQuantity={mockOnUpdateQuantity}
-        onRemoveItem={mockOnRemoveItem}
-      />
-    )
+    render(<CartPanel sale={mockSale} {...baseProps} />)
 
     expect(screen.getByText('Leche 1L')).toBeInTheDocument()
     expect(screen.getByText('Pan Integral')).toBeInTheDocument()
@@ -85,15 +85,7 @@ describe('CartPanel', () => {
       },
     ]
 
-    render(
-      <CartPanel
-        sale={mockSale}
-        isLoading={false}
-        stockError={stockError}
-        onUpdateQuantity={mockOnUpdateQuantity}
-        onRemoveItem={mockOnRemoveItem}
-      />
-    )
+    render(<CartPanel sale={mockSale} {...baseProps} stockError={stockError} />)
 
     expect(screen.getByRole('alert')).toBeInTheDocument()
     expect(screen.getByText(/disponible\s+3/i)).toBeInTheDocument()
@@ -103,15 +95,7 @@ describe('CartPanel', () => {
   it('should disable controls when sale is not ACTIVE', () => {
     const frozenSale = { ...mockSale, status: 'FROZEN' as const }
 
-    render(
-      <CartPanel
-        sale={frozenSale}
-        isLoading={false}
-        stockError={null}
-        onUpdateQuantity={mockOnUpdateQuantity}
-        onRemoveItem={mockOnRemoveItem}
-      />
-    )
+    render(<CartPanel sale={frozenSale} {...baseProps} />)
 
     const quantityInputs = screen.getAllByRole('spinbutton')
     quantityInputs.forEach((input) => {
@@ -120,15 +104,7 @@ describe('CartPanel', () => {
   })
 
   it('should call onRemoveItem after confirmation', async () => {
-    render(
-      <CartPanel
-        sale={mockSale}
-        isLoading={false}
-        stockError={null}
-        onUpdateQuantity={mockOnUpdateQuantity}
-        onRemoveItem={mockOnRemoveItem}
-      />
-    )
+    render(<CartPanel sale={mockSale} {...baseProps} />)
 
     const removeButtons = screen.getAllByRole('button', { name: /eliminar/i })
     await userEvent.click(removeButtons[0])

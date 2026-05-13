@@ -31,28 +31,32 @@ public class TotalsCalculator {
     }
 
     public void refreshLineTotals(SaleLineEntity line) {
-        BigDecimal lt = line.getUnitPrice()
-                .multiply(BigDecimal.valueOf(line.getQuantity()))
-                .setScale(2, RoundingMode.HALF_UP);
-        line.setLineTotal(lt);
+        long grossCents = toCents(line.getUnitPrice()) * line.getQuantity();
+        long lineDiscountCents = computeDiscountCents(grossCents, line.getDiscountType(), line.getDiscountValue());
+        lineDiscountCents = Math.min(lineDiscountCents, grossCents);
+        long netCents = grossCents - lineDiscountCents;
+        line.setDiscountAmount(fromCents(lineDiscountCents));
+        line.setLineTotal(fromCents(netCents));
     }
 
-    /** Recálculo estándar de totales sobre la venta (descuento almacenado en la entidad) */
+    /** Recálculo estándar de totales sobre la venta (descuentos por línea) */
     public void recalculate(SaleEntity sale) {
         sale.getLines().forEach(this::refreshLineTotals);
-        long subCents = sale.getLines().stream()
-                .mapToLong(l -> toCents(l.getLineTotal()))
+        long grossSubCents = sale.getLines().stream()
+                .mapToLong(l -> toCents(l.getUnitPrice()) * l.getQuantity())
                 .sum();
-        long discountCents = computeDiscountCents(subCents, sale.getDiscountType(), sale.getDiscountValue());
-        discountCents = Math.min(discountCents, subCents);
-
-        long taxCents = (subCents * taxBps) / 10000;
-        long totalCents = subCents + taxCents - discountCents;
+        long discountCents = sale.getLines().stream()
+                .mapToLong(l -> toCents(l.getDiscountAmount()))
+                .sum();
+        long taxCents = (grossSubCents * taxBps) / 10000;
+        long totalCents = grossSubCents + taxCents - discountCents;
         if (totalCents < 0) {
             totalCents = 0;
         }
-        sale.setSubtotal(fromCents(subCents));
+        sale.setSubtotal(fromCents(grossSubCents));
         sale.setDiscountAmount(fromCents(discountCents));
+        sale.setDiscountType(null);
+        sale.setDiscountValue(null);
         sale.setTax(fromCents(taxCents));
         sale.setTotal(fromCents(totalCents));
     }
@@ -82,15 +86,14 @@ public class TotalsCalculator {
         };
     }
 
-    /** Valida si el valor de descuento excedería subtotal después de aplicar */
-    public void validateDiscount(SaleEntity sale, DiscountType type, BigDecimal value) {
+    /** Valida si el descuento de una línea excedería su subtotal bruto */
+    public void validateLineDiscount(SaleLineEntity line, DiscountType type, BigDecimal value) {
         if (type == null || value == null) {
             return;
         }
-        sale.getLines().forEach(this::refreshLineTotals);
-        long subCents = sale.getLines().stream().mapToLong(l -> toCents(l.getLineTotal())).sum();
+        long grossCents = toCents(line.getUnitPrice()) * line.getQuantity();
         if (type == DiscountType.FIXED_AMOUNT && value.compareTo(BigDecimal.ZERO) != 0) {
-            if (toCents(value) > subCents) {
+            if (toCents(value) > grossCents) {
                 throw new DiscountExceedsSubtotalException();
             }
         }

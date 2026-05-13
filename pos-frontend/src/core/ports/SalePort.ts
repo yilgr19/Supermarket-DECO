@@ -12,7 +12,12 @@ export interface SalePort {
   addItem(saleId: string, productId: string | undefined, barcode: string | undefined, quantity: number): Promise<Sale>
   updateItem(saleId: string, itemId: string, quantity: number): Promise<Sale>
   removeItem(saleId: string, itemId: string): Promise<Sale>
-  applyDiscount(saleId: string, type: DiscountType, value: number): Promise<Sale>
+  applyItemDiscount(
+    saleId: string,
+    itemId: string,
+    type: DiscountType,
+    value: number
+  ): Promise<Sale>
   freeze(saleId: string): Promise<Sale>
   resume(saleId: string): Promise<Sale>
   cancel(saleId: string, reason: string): Promise<Sale>

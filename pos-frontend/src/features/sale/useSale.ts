@@ -114,13 +114,13 @@ export function useSale() {
     [activeSale, setActiveSale, handleError, clearError]
   )
 
-  const applyDiscount = useCallback(
-    async (type: DiscountType, value: number) => {
+  const applyItemDiscount = useCallback(
+    async (itemId: string, type: DiscountType, value: number) => {
       if (!activeSale) return
       setIsLoading(true)
       clearError()
       try {
-        const updated = await saleUc.applyDiscount(activeSale.id, type, value)
+        const updated = await saleUc.applyItemDiscount(activeSale.id, itemId, type, value)
         setActiveSale(updated)
         return updated
       } catch (err) {
@@ -196,7 +196,7 @@ export function useSale() {
     addItemToSale,
     updateItemQuantity,
     removeItem,
-    applyDiscount,
+    applyItemDiscount,
     freezeSale,
     resumeSale,
     cancelSale,
