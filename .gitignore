@@ -7,6 +7,10 @@ dist/
 **/dist/
 **/dist-ssr/
 
+# Build Java (Maven)
+target/
+**/target/
+
 # TypeScript incremental
 *.tsbuildinfo
 **/*.tsbuildinfo
