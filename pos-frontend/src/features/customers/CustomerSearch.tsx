@@ -31,10 +31,10 @@ export function CustomerSearch({
 
   if (selectedCustomer) {
     return (
-      <div className="rounded-2xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 via-white to-slate-50/80 p-4 shadow-inner shadow-emerald-100/40">
+      <div className="pos-selected-panel">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+            <div className="pos-icon-badge h-11 w-11">
               <UserCheck className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
@@ -66,7 +66,7 @@ export function CustomerSearch({
           onClick={() => setMode('name')}
           className={`flex-1 rounded-lg py-2.5 text-xs font-semibold tracking-wide transition ${
             mode === 'name'
-              ? 'bg-white text-indigo-700 shadow-sm shadow-slate-200/60'
+              ? 'bg-white text-slate-900 shadow-sm'
               : 'text-slate-500 hover:text-slate-800'
           }`}
           aria-pressed={mode === 'name'}
@@ -78,7 +78,7 @@ export function CustomerSearch({
           onClick={() => setMode('document')}
           className={`flex-1 rounded-lg py-2.5 text-xs font-semibold tracking-wide transition ${
             mode === 'document'
-              ? 'bg-white text-indigo-700 shadow-sm shadow-slate-200/60'
+              ? 'bg-white text-slate-900 shadow-sm'
               : 'text-slate-500 hover:text-slate-800'
           }`}
           aria-pressed={mode === 'document'}
@@ -89,7 +89,7 @@ export function CustomerSearch({
 
       <div className="relative">
         <UserSearch
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-400"
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
           aria-hidden="true"
         />
         <input
@@ -119,7 +119,7 @@ export function CustomerSearch({
           {results.map((customer) => (
             <li
               key={customer.id}
-              className="flex items-center justify-between gap-2 bg-white px-3 py-2.5 first:rounded-t-xl last:rounded-b-xl hover:bg-violet-50/40"
+              className="pos-list-row !py-2.5"
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-slate-900">{customer.fullName}</p>
@@ -131,7 +131,7 @@ export function CustomerSearch({
               <button
                 type="button"
                 onClick={() => onSelectCustomer(customer)}
-                className="min-h-[40px] rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 px-3 text-xs font-bold uppercase tracking-wide text-white shadow-md shadow-indigo-500/25 transition hover:from-indigo-500 hover:to-violet-500"
+                className="pos-btn-primary min-h-[40px] px-3 text-xs"
                 aria-label={`Seleccionar ${customer.fullName} / Select ${customer.fullName}`}
               >
                 OK

@@ -32,17 +32,17 @@ export function CustomerSearchModal({
       <div className="pos-modal-panel flex max-h-[min(90vh,640px)] max-w-lg flex-col">
         <div className="flex shrink-0 items-start justify-between gap-4">
           <div>
-            <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-violet-500">
+            <p className="pos-modal-eyebrow">
               Cliente / Customer
             </p>
-            <h2 id="customer-search-title" className="mt-1 text-xl font-bold tracking-tight text-slate-900">
+            <h2 id="customer-search-title" className="pos-modal-title">
               Buscar cliente / Search customer
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="pos-modal-close"
             aria-label="Cerrar / Close"
           >
             <X className="h-5 w-5" />

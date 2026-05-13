@@ -43,8 +43,8 @@ export function CashPaymentForm({
           role="status"
           className={`rounded-2xl p-5 text-center ${
             received >= total
-              ? 'border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-inner'
-              : 'border border-red-200 bg-gradient-to-br from-red-50 to-white'
+              ? 'border border-slate-200 bg-slate-50 shadow-inner'
+              : 'border border-slate-200 bg-white'
           }`}
         >
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">

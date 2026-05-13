@@ -35,11 +35,11 @@ export function CartItemRow({
   return (
     <li className="py-3.5 transition first:pt-2">
       <div className="flex items-start gap-3">
-        <div className="min-w-0 flex-1 border-l-[3px] border-violet-400 pl-3">
+        <div className="min-w-0 flex-1 border-l-[3px] border-slate-300 pl-3">
           <p className="truncate text-sm font-semibold text-slate-900">{item.productName}</p>
           <p className="text-xs text-slate-500">${item.unitPrice.toLocaleString('es-CO')} · unidad</p>
           {hasDiscount && (
-            <p className="mt-1 text-xs font-medium text-emerald-700">
+            <p className="mt-1 text-xs font-medium text-indigo-700">
               Descuento −${(item.discount ?? 0).toLocaleString('es-CO')}
             </p>
           )}
@@ -55,7 +55,7 @@ export function CartItemRow({
               if (val >= 1) onUpdateQuantity(item.id, val)
             }}
             disabled={!isEditable}
-            className="w-[4.25rem] rounded-xl border border-slate-200 bg-slate-50 px-2 py-2 text-center text-sm font-medium tabular-nums text-slate-900 focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-violet-500/12 disabled:bg-slate-100 disabled:text-slate-400"
+            className="w-[4.25rem] rounded-xl border border-slate-200 bg-slate-50 px-2 py-2 text-center text-sm font-medium tabular-nums text-slate-900 focus:border-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
             aria-label={`Cantidad de ${item.productName} / Quantity of ${item.productName}`}
           />
 
@@ -76,8 +76,8 @@ export function CartItemRow({
               onClick={() => setShowDiscount((open) => !open)}
               className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl transition ${
                 showDiscount || hasDiscount
-                  ? 'bg-violet-50 text-violet-600'
-                  : 'text-slate-400 hover:bg-violet-50 hover:text-violet-600'
+                  ? 'bg-slate-100 text-slate-700'
+                  : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700'
               }`}
               aria-label={`Descuento para ${item.productName} / Discount for ${item.productName}`}
               aria-expanded={showDiscount}
@@ -90,7 +90,7 @@ export function CartItemRow({
             type="button"
             onClick={() => onRequestRemove(item)}
             disabled={!isEditable}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-25"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-25"
             aria-label={`Eliminar ${item.productName} / Remove ${item.productName}`}
           >
             <Trash2 className="h-4 w-4" />

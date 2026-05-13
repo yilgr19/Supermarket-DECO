@@ -21,10 +21,10 @@ export function FullReturnForm({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="pos-card border-orange-100/80 bg-gradient-to-br from-orange-50/70 to-white">
+      <div className="pos-card">
         <p className="text-sm leading-relaxed text-slate-600">
           Se devolverán todos los ítems ({itemCount}) por un total de{' '}
-          <span className="font-bold text-orange-900">{totalFormatted}</span>.
+          <span className="font-bold text-slate-900">{totalFormatted}</span>.
         </p>
       </div>
       <div>
@@ -32,7 +32,7 @@ export function FullReturnForm({
           htmlFor="full-reason"
           className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500"
         >
-          Motivo / Reason <span className="text-red-500">*</span>
+          Motivo / Reason <span className="text-indigo-500">*</span>
         </label>
         <textarea
           id="full-reason"
@@ -47,7 +47,7 @@ export function FullReturnForm({
         type="button"
         onClick={onSubmit}
         disabled={isLoading || !canSubmit}
-        className="min-h-[48px] rounded-xl bg-gradient-to-r from-orange-600 to-red-600 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition hover:from-orange-500 hover:to-red-500 disabled:pointer-events-none disabled:opacity-40"
+        className="pos-btn-primary min-h-[48px] w-full disabled:pointer-events-none disabled:opacity-40"
       >
         {isLoading ? 'Procesando…' : 'Confirmar devolución total'}
       </button>

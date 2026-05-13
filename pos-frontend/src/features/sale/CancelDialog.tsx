@@ -41,7 +41,7 @@ export function CancelDialog({ isOpen, isLoading, onConfirm, onCancel }: CancelD
       <div className="pos-modal-panel">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="mb-2 inline-flex rounded-xl bg-red-50 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-red-700 ring-1 ring-red-100">
+            <div className="mb-2 inline-flex rounded-lg bg-slate-100 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-slate-600 ring-1 ring-slate-200">
               Acción irreversible / Irreversible
             </div>
             <h2 id="cancel-dialog-title" className="text-lg font-bold tracking-tight text-slate-900">
@@ -51,7 +51,7 @@ export function CancelDialog({ isOpen, isLoading, onConfirm, onCancel }: CancelD
           <button
             type="button"
             onClick={handleCancel}
-            className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="pos-modal-close"
             aria-label="Cerrar / Close"
           >
             <X className="h-5 w-5" />
@@ -85,7 +85,7 @@ export function CancelDialog({ isOpen, isLoading, onConfirm, onCancel }: CancelD
           <p
             id="cancel-reason-count"
             className={`mt-1.5 text-right text-xs ${
-              reason.length > MAX_REASON_LENGTH - 24 ? 'font-medium text-amber-600' : 'text-slate-400'
+              reason.length > MAX_REASON_LENGTH - 24 ? 'font-medium text-slate-600' : 'text-slate-400'
             }`}
           >
             {reason.length}/{MAX_REASON_LENGTH}
@@ -110,7 +110,7 @@ export function CancelDialog({ isOpen, isLoading, onConfirm, onCancel }: CancelD
             type="button"
             onClick={handleConfirm}
             disabled={isLoading}
-            className="min-h-[44px] rounded-xl bg-red-600 px-5 text-sm font-semibold text-white shadow-lg shadow-red-500/25 transition hover:bg-red-500 disabled:opacity-50"
+            className="pos-btn-primary min-w-[100px] disabled:opacity-50"
           >
             {isLoading ? 'Cancelando...' : 'Confirmar'}
           </button>

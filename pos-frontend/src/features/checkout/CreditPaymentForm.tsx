@@ -21,12 +21,12 @@ export function CreditPaymentForm({ selectedCustomer }: CreditPaymentFormProps) 
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-amber-200/90 bg-gradient-to-br from-amber-50 to-white p-4 text-sm text-amber-900 shadow-sm">
+        <div className="pos-alert text-sm">
           Se requiere un cliente para crédito. / Customer required for credit.
         </div>
       )}
       {selectedCustomer && selectedCustomer.creditStatus !== 'APPROVED' && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        <div className="pos-alert text-sm">
           Crédito no aprobado. / Credit not approved.
         </div>
       )}

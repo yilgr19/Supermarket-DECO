@@ -29,36 +29,26 @@ export function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-40"
-        aria-hidden="true"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle at 15% 50%, rgb(139 92 246 / 0.18), transparent 45%), radial-gradient(circle at 85% 30%, rgb(99 102 241 / 0.15), transparent 40%)',
-        }}
-      />
+    <div className="pos-login-shell">
+      <div className="pos-login-shell__glow" aria-hidden="true" />
 
       <div className="relative w-full max-w-md">
-        <div className="pos-card border-white/60 p-8 shadow-glow sm:p-10">
-          <div className="mb-8 flex flex-col items-center text-center">
-            <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-700 shadow-lg shadow-indigo-500/30">
+        <div className="pos-login-card">
+          <div className="pos-login-brand">
+            <div className="pos-login-brand__icon">
               <ShoppingCart className="h-8 w-8 text-white" aria-hidden="true" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            <h1 className="pos-login-brand__title">
               {import.meta.env.VITE_STORE_NAME || 'Supermercado POS'}
             </h1>
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="pos-login-brand__subtitle">
               Punto de venta · Iniciar sesión / Sign in
             </p>
           </div>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             <div>
-              <label
-                htmlFor="cashierId"
-                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
-              >
+              <label htmlFor="cashierId" className="pos-field-label">
                 ID de cajero / Cashier ID
               </label>
               <input
@@ -79,10 +69,7 @@ export function LoginPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="terminalId"
-                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
-              >
+              <label htmlFor="terminalId" className="pos-field-label">
                 ID de terminal / Terminal ID
               </label>
               <input
@@ -107,9 +94,7 @@ export function LoginPage() {
             </button>
           </form>
         </div>
-        <p className="mt-6 text-center text-xs text-slate-400">
-          Secure checkout session · Local demo
-        </p>
+        <p className="pos-login-footnote">Secure checkout session · Local demo</p>
       </div>
     </div>
   )

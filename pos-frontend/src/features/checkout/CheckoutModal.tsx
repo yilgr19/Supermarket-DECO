@@ -54,7 +54,7 @@ export function CheckoutModal({ isOpen, onClose, selectedCustomer }: CheckoutMod
       <div className="pos-modal-panel max-w-lg">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-violet-500">
+            <p className="pos-modal-eyebrow">
               Checkout
             </p>
             <h2 id="checkout-title" className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
@@ -125,11 +125,11 @@ export function CheckoutModal({ isOpen, onClose, selectedCustomer }: CheckoutMod
         {error && (
           <div className="mt-4">
             {outOfStockItems && outOfStockItems.length > 0 ? (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                <p className="mb-2 text-sm font-semibold text-amber-900">Stock insuficiente</p>
+              <div className="pos-alert">
+                <p className="mb-2 text-sm font-semibold">Stock insuficiente</p>
                 <ul className="space-y-1">
                   {outOfStockItems.map((item) => (
-                    <li key={item.productId} className="text-xs text-amber-800">
+                    <li key={item.productId} className="text-xs">
                       {item.productName}: disponible {item.available}
                     </li>
                   ))}

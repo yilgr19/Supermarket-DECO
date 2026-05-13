@@ -14,6 +14,7 @@ import { CheckoutModal } from '../checkout/CheckoutModal'
 import { SaleKeyboardShortcutsHelp } from './SaleKeyboardShortcutsHelp'
 import { useSaleKeyboardShortcuts } from './useSaleKeyboardShortcuts'
 import { SaleStatusBadge } from '../../shared/components/StatusBadge'
+import { PosAppHeader } from '../../shared/components/PosAppHeader'
 import { ErrorMessage } from '../../shared/components/ErrorMessage'
 import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
 import { useSessionStore } from '../../infrastructure/store/sessionStore'
@@ -144,25 +145,21 @@ export function SalePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-4 py-3.5 text-white shadow-pos-lg">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
-              <ShoppingBag className="h-5 w-5 text-violet-200" aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold tracking-tight">
-                {import.meta.env.VITE_STORE_NAME || 'Supermercado POS'}
-              </p>
-              <p className="truncate text-xs text-slate-400">
-                Terminal <span className="text-violet-200">{terminalId}</span>
-                {' · '}
-                Cajero <span className="text-violet-200">{cashierId}</span>
-              </p>
-            </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-1">
-            {activeSale && <SaleStatusBadge status={activeSale.status} />}
+      <PosAppHeader
+        variant="dark"
+        sticky
+        icon={<ShoppingBag className="h-5 w-5" aria-hidden="true" />}
+        title={import.meta.env.VITE_STORE_NAME || 'Supermercado POS'}
+        subtitle={
+          <>
+            Terminal <span className="pos-header-meta">{terminalId}</span>
+            {' · '}
+            Cajero <span className="pos-header-meta">{cashierId}</span>
+          </>
+        }
+        actions={
+          <>
+            {activeSale && <SaleStatusBadge status={activeSale.status} variant="onDark" />}
             <button
               onClick={() => navigate('/products')}
               className="pos-btn-quiet"
@@ -190,17 +187,17 @@ export function SalePage() {
             >
               <LogOut className="h-5 w-5" />
             </button>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
-      <main className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-3 p-4">
+      <main className="pos-page-main flex">
         <div className="pos-action-bar">
           <button
             type="button"
             onClick={() => setShowProductSearch(true)}
             disabled={!isActive || isLoading}
-            className="pos-action-btn pos-action-btn--product"
+            className="pos-action-btn"
           >
             <span className="pos-action-btn__icon" aria-hidden="true">
               <Search className="h-4 w-4" />
@@ -214,7 +211,7 @@ export function SalePage() {
             type="button"
             onClick={() => setShowCustomerSearch(true)}
             disabled={!isActive || isLoading}
-            className="pos-action-btn pos-action-btn--customer"
+            className="pos-action-btn"
           >
             <span className="pos-action-btn__icon" aria-hidden="true">
               <UserSearch className="h-4 w-4" />
@@ -299,7 +296,7 @@ export function SalePage() {
                   onClick={() => setShowCancelDialog(true)}
                   disabled={isLoading}
                   type="button"
-                  className="pos-btn-danger flex-1 disabled:opacity-50"
+                  className="pos-btn-secondary flex-1 disabled:opacity-50"
                 >
                   <XCircle className="h-4 w-4" aria-hidden="true" />
                   Cancelar / Cancel
@@ -311,7 +308,7 @@ export function SalePage() {
                   onClick={() => setShowCheckout(true)}
                   disabled={isLoading || activeSale.items.length === 0}
                   type="button"
-                  className="pos-btn-primary min-w-[140px] flex-1 shadow-indigo-500/20 disabled:opacity-50"
+                  className="pos-btn-primary min-w-[140px] flex-1 disabled:opacity-50"
                 >
                   Checkout
                 </button>

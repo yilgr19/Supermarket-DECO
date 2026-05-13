@@ -60,12 +60,12 @@ export function CartPanel({
           <div
             role="alert"
             aria-live="polite"
-            className="rounded-xl border border-amber-200/90 bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm"
+            className="pos-alert"
           >
-            <p className="mb-2 text-sm font-semibold text-amber-900">Stock insuficiente</p>
+            <p className="mb-2 text-sm font-semibold text-indigo-900">Stock insuficiente</p>
             <ul className="space-y-1.5">
               {stockError.map((item) => (
-                <li key={item.productId} className="text-xs text-amber-800">
+                <li key={item.productId} className="text-xs text-indigo-800">
                   <span className="font-semibold">{item.productName}</span>
                   {' — '}
                   solicitado {item.requested}, disponible {item.available}

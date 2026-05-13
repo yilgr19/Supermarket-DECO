@@ -3,62 +3,72 @@
 import type { SaleStatus } from '../../core/types/sale.types'
 import type { CreditStatus } from '../../core/types/customer.types'
 
+const neutralBadge = 'bg-slate-100 text-slate-700 ring-1 ring-slate-200'
+const activeBadge = 'bg-slate-200 text-slate-800 ring-1 ring-slate-300'
+
 const saleStatusConfig: Record<SaleStatus, { label: string; className: string }> = {
   ACTIVE: {
     label: 'Activa / Active',
-    className:
-      'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/80',
+    className: activeBadge,
   },
   FROZEN: {
     label: 'Congelada / Frozen',
-    className: 'bg-sky-50 text-sky-800 ring-1 ring-sky-200/80',
+    className: neutralBadge,
   },
   COMPLETED: {
     label: 'Completada / Completed',
-    className: 'bg-slate-100 text-slate-700 ring-1 ring-slate-200',
+    className: neutralBadge,
   },
   CANCELLED: {
     label: 'Cancelada / Cancelled',
-    className: 'bg-red-50 text-red-800 ring-1 ring-red-200/80',
+    className: neutralBadge,
   },
   RETURNED: {
     label: 'Devuelta / Returned',
-    className: 'bg-orange-50 text-orange-900 ring-1 ring-orange-200/80',
+    className: neutralBadge,
   },
   PARTIALLY_RETURNED: {
     label: 'Dev. Parcial / Partial Return',
-    className: 'bg-amber-50 text-amber-900 ring-1 ring-amber-200/70',
+    className: neutralBadge,
   },
 }
 
 const creditStatusConfig: Record<CreditStatus, { label: string; className: string }> = {
   APPROVED: {
     label: 'Aprobado / Approved',
-    className:
-      'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/80',
+    className: activeBadge,
   },
   REJECTED: {
     label: 'Rechazado / Rejected',
-    className:
-      'bg-red-50 text-red-800 ring-1 ring-red-200/80',
+    className: neutralBadge,
   },
   PENDING: {
     label: 'Pendiente / Pending',
-    className:
-      'bg-amber-50 text-amber-900 ring-1 ring-amber-200/70',
+    className: neutralBadge,
   },
 }
 
 interface SaleStatusBadgeProps {
   status: SaleStatus
+  variant?: 'default' | 'onDark'
 }
 
 interface CreditStatusBadgeProps {
   status: CreditStatus
 }
 
-export function SaleStatusBadge({ status }: SaleStatusBadgeProps) {
+export function SaleStatusBadge({ status, variant = 'default' }: SaleStatusBadgeProps) {
   const config = saleStatusConfig[status]
+  if (variant === 'onDark') {
+    return (
+      <span
+        className="inline-flex max-w-[11rem] items-center truncate rounded-full bg-slate-800 px-3 py-1 text-[0.6875rem] font-semibold text-slate-100 ring-1 ring-slate-700"
+        title={config.label}
+      >
+        {config.label}
+      </span>
+    )
+  }
   return (
     <span
       className={`inline-flex max-w-[11rem] items-center truncate rounded-full px-3 py-1 text-[0.6875rem] font-semibold ${config.className}`}

@@ -106,10 +106,8 @@ export function BarcodeScanner({ onProductFound }: BarcodeScannerProps) {
         <button
           type="button"
           onClick={isCameraActive ? stopCamera : startCamera}
-          className={`flex min-h-[44px] min-w-[48px] items-center justify-center rounded-xl px-3 text-white shadow-md transition hover:brightness-105 ${
-            isCameraActive
-              ? 'bg-gradient-to-br from-red-500 to-red-700 shadow-red-500/20'
-              : 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 shadow-slate-500/25'
+          className={`flex min-h-[44px] min-w-[48px] items-center justify-center rounded-xl px-3 text-white shadow-sm transition hover:bg-slate-800 ${
+            isCameraActive ? 'bg-slate-700' : 'bg-slate-900'
           }`}
           aria-label={
             isCameraActive

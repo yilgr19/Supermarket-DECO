@@ -44,7 +44,7 @@ export function DiscountForm({
     >
       {!compact && (
         <div className="mb-3 flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-600 ring-1 ring-violet-100">
+          <div className="pos-icon-badge">
             <Tag className="h-4 w-4" aria-hidden="true" />
           </div>
           <span className="text-sm font-semibold text-slate-800">Descuento / Discount</span>
@@ -56,7 +56,7 @@ export function DiscountForm({
           type="button"
           onClick={onRemove}
           disabled={isLoading}
-          className="pos-btn-secondary w-full justify-center gap-2 border-red-100 text-red-700 hover:bg-red-50 hover:border-red-200 disabled:opacity-50"
+          className="pos-btn-secondary w-full justify-center gap-2 disabled:opacity-50"
         >
           <X className="h-4 w-4" />
           Remover descuento / Remove
@@ -69,7 +69,7 @@ export function DiscountForm({
               onClick={() => setType('PERCENTAGE')}
               className={`flex-1 rounded-xl py-3 text-xs font-semibold uppercase tracking-wide transition ${
                 type === 'PERCENTAGE'
-                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                  ? 'bg-slate-900 text-white shadow-sm'
                   : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
               }`}
               aria-pressed={type === 'PERCENTAGE'}
@@ -81,7 +81,7 @@ export function DiscountForm({
               onClick={() => setType('FIXED_AMOUNT')}
               className={`flex-1 rounded-xl py-3 text-xs font-semibold uppercase tracking-wide transition ${
                 type === 'FIXED_AMOUNT'
-                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                  ? 'bg-slate-900 text-white shadow-sm'
                   : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
               }`}
               aria-pressed={type === 'FIXED_AMOUNT'}
@@ -109,7 +109,7 @@ export function DiscountForm({
               type="button"
               onClick={handleApply}
               disabled={isLoading || !value || parseFloat(value) <= 0}
-              className="min-h-[46px] rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white shadow-md shadow-emerald-600/20 transition hover:bg-emerald-500 disabled:pointer-events-none disabled:opacity-40"
+              className="pos-btn-primary min-h-[46px] px-5 disabled:pointer-events-none disabled:opacity-40"
             >
               Aplicar
             </button>

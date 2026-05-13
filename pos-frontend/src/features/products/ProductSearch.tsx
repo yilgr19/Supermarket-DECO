@@ -18,7 +18,7 @@ export function ProductSearch({ onAddProduct }: ProductSearchProps) {
     <div className="flex flex-col gap-3">
       <div className="relative">
         <Search
-          className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-violet-400"
+          className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
           aria-hidden="true"
         />
         <input
@@ -50,14 +50,14 @@ export function ProductSearch({ onAddProduct }: ProductSearchProps) {
           {results.map((product) => (
             <li
               key={product.id}
-              className="flex items-center justify-between gap-3 bg-white px-3 py-3 transition first:rounded-t-xl last:rounded-b-xl hover:bg-violet-50/50"
+              className="pos-list-row"
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold text-slate-900">{product.name}</p>
                 <p className="text-xs text-slate-500">
-                  {product.barcode} · <span className="text-violet-600/90">{product.category}</span>
+                  {product.barcode} · <span className="text-slate-600">{product.category}</span>
                 </p>
-                <p className="mt-0.5 text-sm font-bold text-indigo-600">
+                <p className="mt-0.5 text-sm font-bold text-slate-900">
                   ${product.unitPrice.toLocaleString('es-CO')}
                   <span className="ml-2 text-xs font-medium text-slate-400">
                     Stock {product.availableStock}
@@ -67,7 +67,7 @@ export function ProductSearch({ onAddProduct }: ProductSearchProps) {
               <button
                 onClick={() => onAddProduct(product)}
                 disabled={product.availableStock === 0}
-                className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-md shadow-indigo-500/20 transition hover:from-violet-500 hover:to-indigo-500 disabled:cursor-not-allowed disabled:opacity-35"
+                className="pos-btn-icon"
                 aria-label={`Agregar ${product.name} / Add ${product.name}`}
                 type="button"
               >

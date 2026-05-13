@@ -55,7 +55,7 @@ export function ConfirmDialog({
                 if (!pending) onConfirm()
                 onOpenChange?.(false)
               }}
-              className="min-h-[44px] rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-5 text-sm font-bold text-white shadow-md shadow-red-500/20 transition hover:from-red-500 hover:to-rose-500 disabled:opacity-50"
+              className="pos-btn-primary min-h-[44px] px-5 disabled:opacity-50"
             >
               {confirmLabel}
             </button>

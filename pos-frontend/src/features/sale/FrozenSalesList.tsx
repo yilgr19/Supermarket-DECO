@@ -10,6 +10,7 @@ import { useSale } from './useSale'
 import { useSessionStore } from '../../infrastructure/store/sessionStore'
 import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
 import { ErrorMessage } from '../../shared/components/ErrorMessage'
+import { PosPageHero } from '../../shared/components/PosPageHero'
 import type { Sale } from '../../core/types/sale.types'
 import { getErrorMessage } from '../../infrastructure/http/ApiError'
 
@@ -55,8 +56,8 @@ export function FrozenSalesList() {
   }
   if (fetchError) {
     return (
-      <div className="mx-auto max-w-xl p-6">
-        <div className="pos-card border-red-100/70">
+      <div className="pos-page pos-page--medium">
+        <div className="pos-card pos-card--danger">
           <ErrorMessage message={fetchError} />
         </div>
       </div>
@@ -64,19 +65,16 @@ export function FrozenSalesList() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 sm:p-10">
-      <div className="mb-10 flex flex-wrap items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 shadow-lg shadow-indigo-500/25">
-          <Snowflake className="h-7 w-7 text-white" aria-hidden />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Ventas congeladas</h1>
-          <p className="text-sm text-slate-500">Frozen holds · Terminal {terminalId}</p>
-        </div>
-      </div>
+    <div className="pos-page pos-page--medium">
+      <PosPageHero
+        tone="sky"
+        icon={<Snowflake className="h-7 w-7" aria-hidden />}
+        title="Ventas congeladas"
+        subtitle={`Frozen holds · Terminal ${terminalId}`}
+      />
 
       {frozenSales.length === 0 ? (
-        <div className="pos-card flex flex-col items-center border-dashed bg-slate-50/70 py-20 text-center">
+        <div className="pos-empty-state">
           <Snowflake className="mb-5 h-12 w-12 text-slate-300" aria-hidden />
           <p className="font-medium text-slate-600">No hay ventas en espera</p>
           <p className="mt-1 text-sm text-slate-400">No frozen transactions</p>
@@ -90,8 +88,8 @@ export function FrozenSalesList() {
                 key={sale.id}
                 className={`pos-card overflow-hidden border-l-[4px] p-5 transition hover:shadow-pos-lg ${
                   isExpired
-                    ? 'border-l-red-500 bg-gradient-to-br from-red-50/90 to-white'
-                    : 'border-l-sky-400'
+                    ? 'border-l-slate-400 bg-slate-50'
+                    : 'border-l-slate-300'
                 }`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
@@ -102,7 +100,7 @@ export function FrozenSalesList() {
                     </p>
                     <p className="mt-1 text-sm text-slate-600">
                       {sale.items.length} ítem ·{' '}
-                      <span className="font-semibold text-indigo-600">
+                      <span className="pos-accent-text">
                         $
                         {sale.total.toLocaleString('es-CO')}
                       </span>
@@ -113,7 +111,7 @@ export function FrozenSalesList() {
                       </p>
                     )}
                     {isExpired && (
-                      <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2 text-xs font-semibold text-red-700 ring-1 ring-red-100">
+                      <div className="mt-3 inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
                         <AlertTriangle className="h-3.5 w-3.5" />
                         Expirada / Expired
                       </div>

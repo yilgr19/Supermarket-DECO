@@ -21,8 +21,8 @@ export default {
           muted: '#64748b',
           line: '#e2e8f0',
           surface: '#f8fafc',
-          accent: '#6366f1',
-          accent2: '#4f46e5',
+          accent: '#334155',
+          accent2: '#1e293b',
           success: '#10b981',
           danger: '#ef4444',
           warn: '#f59e0b',
@@ -31,7 +31,7 @@ export default {
       boxShadow: {
         pos: '0 4px 24px -4px rgb(15 23 42 / 0.08), 0 8px 16px -8px rgb(15 23 42 / 0.06)',
         'pos-lg': '0 12px 40px -8px rgb(15 23 42 / 0.12)',
-        glow: '0 0 0 1px rgb(139 92 246 / 0.12), 0 8px 32px -4px rgb(99 102 241 / 0.25)',
+        glow: '0 0 0 1px rgb(15 23 42 / 0.06), 0 8px 24px -6px rgb(15 23 42 / 0.12)',
       },
       borderRadius: {
         '2xl': '1rem',

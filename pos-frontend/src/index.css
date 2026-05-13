@@ -8,11 +8,8 @@
   }
 
   body {
-    @apply bg-slate-50 font-sans text-slate-900 antialiased;
-    background-image:
-      radial-gradient(ellipse 900px 520px at 0% -5%, rgb(237 233 254 / 0.85), transparent 55%),
-      radial-gradient(ellipse 700px 440px at 100% -2%, rgb(219 234 254 / 0.7), transparent 50%),
-      linear-gradient(180deg, rgb(248 250 252) 0%, rgb(241 245 249) 100%);
+    @apply bg-slate-100 font-sans text-slate-900 antialiased;
+    background-image: linear-gradient(180deg, rgb(248 250 252) 0%, rgb(241 245 249) 100%);
     background-attachment: fixed;
     min-height: 100vh;
   }
@@ -20,16 +17,272 @@
 
 @layer components {
   .pos-card {
-    @apply rounded-2xl border border-slate-200 bg-white p-5 shadow-pos backdrop-blur-sm;
+    @apply rounded-2xl border border-slate-200 bg-white p-5 shadow-pos;
+  }
+
+  .pos-card--dashed {
+    @apply border-dashed border-slate-200 bg-slate-50;
+  }
+
+  .pos-card--danger {
+    @apply border-red-200 bg-red-50/60;
   }
 
   .pos-section-title {
-    @apply mb-4 flex items-center gap-2 text-[0.625rem] font-bold uppercase tracking-[0.22em] text-slate-400;
+    @apply mb-1 flex items-center gap-2 text-[0.625rem] font-bold uppercase tracking-[0.22em] text-slate-500;
+  }
+
+  .pos-section-lead {
+    @apply mb-4 text-sm leading-relaxed text-slate-500;
+  }
+
+  .pos-field-label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500;
+  }
+
+  .pos-page {
+    @apply mx-auto w-full px-4 py-8 sm:px-6 sm:p-10;
+  }
+
+  .pos-page--narrow {
+    @apply max-w-md;
+  }
+
+  .pos-page--medium {
+    @apply max-w-2xl;
+  }
+
+  .pos-page--wide {
+    @apply max-w-6xl;
+  }
+
+  .pos-page-main {
+    @apply mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-3 p-4 sm:p-5;
+  }
+
+  .pos-app-header {
+    @apply border-b border-slate-200 bg-white px-4 py-4 shadow-sm;
+  }
+
+  .pos-app-header--sticky {
+    @apply sticky top-0 z-40;
+  }
+
+  .pos-app-header--dark {
+    @apply border-slate-800 bg-slate-900 text-white shadow-sm;
+  }
+
+  .pos-app-header__inner {
+    @apply mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3;
+  }
+
+  .pos-app-header--dark .pos-app-header__inner {
+    @apply max-w-[1600px];
+  }
+
+  .pos-app-header__brand {
+    @apply flex min-w-0 items-center gap-3;
+  }
+
+  .pos-app-header__icon {
+    @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm ring-1 ring-slate-800;
+  }
+
+  .pos-app-header__icon--dark {
+    @apply bg-slate-800 text-slate-100 ring-slate-700;
+  }
+
+  .pos-app-header__text {
+    @apply min-w-0;
+  }
+
+  .pos-app-header__title {
+    @apply truncate text-lg font-semibold tracking-tight text-slate-900;
+  }
+
+  .pos-app-header--dark .pos-app-header__title {
+    @apply text-sm font-semibold text-white;
+  }
+
+  .pos-app-header__subtitle {
+    @apply truncate text-xs text-slate-500;
+  }
+
+  .pos-app-header--dark .pos-app-header__subtitle {
+    @apply text-slate-400;
+  }
+
+  .pos-app-header__actions {
+    @apply flex shrink-0 flex-wrap items-center gap-1;
+  }
+
+  .pos-page-hero {
+    @apply mb-8 flex flex-wrap items-center gap-4 sm:mb-10;
+  }
+
+  .pos-page-hero__icon {
+    @apply flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm;
+  }
+
+  .pos-page-hero__icon--violet,
+  .pos-page-hero__icon--sky,
+  .pos-page-hero__icon--amber {
+    @apply bg-slate-900 text-white shadow-sm;
+  }
+
+  .pos-page-hero__eyebrow {
+    @apply text-[0.65rem] font-bold uppercase tracking-[0.2em] text-slate-500;
+  }
+
+  .pos-page-hero__eyebrow--violet,
+  .pos-page-hero__eyebrow--sky,
+  .pos-page-hero__eyebrow--amber {
+    @apply text-slate-500;
+  }
+
+  .pos-page-hero__title {
+    @apply text-2xl font-bold tracking-tight text-slate-900;
+  }
+
+  .pos-page-hero__subtitle {
+    @apply text-sm text-slate-500;
+  }
+
+  .pos-login-shell {
+    @apply relative flex min-h-screen items-center justify-center px-4 py-10;
+  }
+
+  .pos-login-shell__glow {
+    @apply pointer-events-none absolute inset-0;
+    background-image: radial-gradient(circle at 50% 0%, rgb(148 163 184 / 0.12), transparent 55%);
+  }
+
+  .pos-login-card {
+    @apply pos-card p-8 sm:p-10;
+  }
+
+  .pos-login-brand {
+    @apply mb-8 flex flex-col items-center text-center;
+  }
+
+  .pos-login-brand__icon {
+    @apply mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm;
+  }
+
+  .pos-login-brand__title {
+    @apply text-2xl font-bold tracking-tight text-slate-900;
+  }
+
+  .pos-login-brand__subtitle {
+    @apply mt-2 text-sm text-slate-500;
+  }
+
+  .pos-login-footnote {
+    @apply mt-6 text-center text-xs text-slate-400;
+  }
+
+  .pos-segmented {
+    @apply mb-8 flex rounded-xl border border-slate-200 bg-slate-100 p-1;
+  }
+
+  .pos-segmented__btn {
+    @apply flex flex-1 items-center justify-center rounded-lg py-3 text-sm font-semibold text-slate-500 transition;
+    @apply hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300;
+  }
+
+  .pos-segmented__btn--active,
+  .pos-segmented__btn--active-amber {
+    @apply bg-white text-slate-900 shadow-sm;
+  }
+
+  .pos-alert {
+    @apply rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700;
+  }
+
+  .pos-table-wrap {
+    @apply overflow-x-auto rounded-xl border border-slate-200 bg-white;
+  }
+
+  .pos-table {
+    @apply w-full min-w-[760px] text-left text-sm;
+  }
+
+  .pos-table thead {
+    @apply border-b border-slate-200 bg-slate-50 text-slate-600;
+  }
+
+  .pos-table th {
+    @apply px-4 py-3 text-xs font-semibold uppercase tracking-wide;
+  }
+
+  .pos-table tbody tr {
+    @apply border-b border-slate-100 transition hover:bg-slate-50;
+  }
+
+  .pos-table td {
+    @apply px-4 py-3;
+  }
+
+  .pos-table__empty {
+    @apply px-4 py-10 text-center text-slate-500;
+  }
+
+  .pos-table-footer {
+    @apply flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3 text-sm;
+  }
+
+  .pos-empty-state {
+    @apply pos-card pos-card--dashed flex flex-col items-center py-20 text-center;
+  }
+
+  .pos-modal-close {
+    @apply rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300;
+  }
+
+  .pos-modal-eyebrow {
+    @apply text-[0.65rem] font-bold uppercase tracking-[0.2em] text-slate-500;
+  }
+
+  .pos-modal-title {
+    @apply mt-1 text-xl font-bold tracking-tight text-slate-900;
+  }
+
+  .pos-receipt-shell {
+    @apply min-h-screen py-10;
+  }
+
+  .pos-accent-text {
+    @apply font-semibold text-slate-900;
+  }
+
+  .pos-header-meta {
+    @apply font-medium text-slate-300;
+  }
+
+  .pos-header-frozen-btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-3 text-sm font-medium text-slate-100 transition;
+    @apply hover:border-slate-500 hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900;
+  }
+
+  .pos-header-frozen-btn__label {
+    @apply hidden max-w-[7.5rem] truncate sm:inline;
+  }
+
+  .pos-header-frozen-btn__hint {
+    @apply hidden text-[0.65rem] font-medium uppercase tracking-wide text-slate-400 md:inline;
+  }
+
+  .pos-btn-danger {
+    @apply pos-btn-secondary;
+  }
+
+  .pos-btn-freeze {
+    @apply pos-btn-secondary flex-1;
   }
 
   .pos-input {
     @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 transition;
-    @apply focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100;
+    @apply focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200;
   }
 
   .pos-input-search {
@@ -37,8 +290,8 @@
   }
 
   .pos-btn-primary {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 via-violet-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition;
-    @apply hover:from-violet-500 hover:to-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40;
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition;
+    @apply hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40;
   }
 
   .pos-btn-secondary {
@@ -47,31 +300,12 @@
   }
 
   .pos-btn-quiet {
-    @apply inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-white transition;
-    @apply hover:bg-white hover:bg-opacity-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-40;
+    @apply inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-slate-300 transition;
+    @apply hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500;
   }
 
-  .pos-header-frozen-btn {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-sky-300/25 bg-sky-400/10 px-3 text-sm font-semibold text-sky-50 transition;
-    @apply hover:border-sky-200/40 hover:bg-sky-400/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900;
-  }
-
-  .pos-header-frozen-btn__label {
-    @apply hidden max-w-[7.5rem] truncate sm:inline;
-  }
-
-  .pos-header-frozen-btn__hint {
-    @apply hidden text-[0.65rem] font-medium uppercase tracking-wide text-sky-200/80 md:inline;
-  }
-
-  .pos-btn-danger {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 shadow-sm transition;
-    @apply hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 focus-visible:ring-offset-2 disabled:opacity-40;
-  }
-
-  .pos-btn-freeze {
-    @apply inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-3 text-sm font-medium text-indigo-800 shadow-sm transition;
-    @apply hover:border-indigo-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-200 focus-visible:ring-offset-2 disabled:opacity-40;
+  .pos-btn-icon {
+    @apply inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-35;
   }
 
   .pos-action-bar {
@@ -79,33 +313,12 @@
   }
 
   .pos-action-btn {
-    @apply relative inline-flex min-h-[3.5rem] min-w-[min(100%,14rem)] flex-1 items-center gap-3.5 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-3.5 text-left shadow-pos backdrop-blur-sm transition duration-200;
-    @apply hover:-translate-y-px hover:border-violet-200/90 hover:bg-white hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-200 focus-visible:ring-offset-2 active:translate-y-0 disabled:pointer-events-none disabled:opacity-45;
-  }
-
-  .pos-action-btn::before {
-    content: '';
-    @apply pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-2xl bg-gradient-to-b opacity-90;
-  }
-
-  .pos-action-btn--product::before {
-    @apply from-violet-500 to-indigo-500;
-  }
-
-  .pos-action-btn--customer::before {
-    @apply from-sky-500 to-cyan-500;
+    @apply inline-flex min-h-[3.5rem] min-w-[min(100%,14rem)] flex-1 items-center gap-3.5 rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-left shadow-sm transition duration-200;
+    @apply hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45;
   }
 
   .pos-action-btn__icon {
-    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md ring-1 ring-white/20;
-  }
-
-  .pos-action-btn--product .pos-action-btn__icon {
-    @apply bg-gradient-to-br from-violet-500 to-indigo-600 shadow-indigo-500/25;
-  }
-
-  .pos-action-btn--customer .pos-action-btn__icon {
-    @apply bg-gradient-to-br from-sky-500 to-cyan-600 shadow-sky-500/25;
+    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700;
   }
 
   .pos-action-btn__label {
@@ -117,12 +330,12 @@
   }
 
   .pos-customer-chip {
-    @apply ml-auto inline-flex min-h-[3.5rem] max-w-full items-center gap-3 rounded-2xl border border-emerald-200/80 bg-gradient-to-r from-emerald-50 via-white to-white px-4 py-2.5 text-left shadow-pos transition duration-200;
-    @apply hover:-translate-y-px hover:border-emerald-300 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 focus-visible:ring-offset-2 active:translate-y-0;
+    @apply ml-auto inline-flex min-h-[3.5rem] max-w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-left shadow-sm transition duration-200;
+    @apply hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2;
   }
 
   .pos-customer-chip__icon {
-    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200/60;
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700;
   }
 
   .pos-customer-chip__name {
@@ -134,15 +347,15 @@
   }
 
   .pos-modal-backdrop {
-    @apply fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 backdrop-blur-sm;
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm;
   }
 
   .pos-modal-panel {
-    @apply max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl border border-slate-200 bg-white p-7 shadow-pos-lg md:max-h-[920px];
+    @apply max-h-[92vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-7 shadow-pos-lg md:max-h-[920px];
   }
 
   .pos-shortcuts-panel {
-    @apply fixed bottom-4 left-4 z-30 w-[min(100vw-2rem,18rem)] rounded-2xl border border-slate-200/90 bg-white/95 p-3 shadow-pos-lg backdrop-blur-md;
+    @apply fixed bottom-4 left-4 z-30 w-[min(100vw-2rem,18rem)] rounded-xl border border-slate-200 bg-white p-3 shadow-pos-lg;
   }
 
   .pos-shortcuts-panel__header {
@@ -150,11 +363,11 @@
   }
 
   .pos-shortcuts-panel__close {
-    @apply inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-200;
+    @apply inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300;
   }
 
   .pos-shortcuts-toggle {
-    @apply fixed bottom-4 left-4 z-30 inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white/95 px-3 py-2 text-xs font-semibold text-slate-700 shadow-pos backdrop-blur-md transition hover:border-violet-200 hover:text-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-200 focus-visible:ring-offset-2;
+    @apply fixed bottom-4 left-4 z-30 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2;
   }
 
   .pos-shortcuts-panel__title {
@@ -178,7 +391,7 @@
   }
 
   .pos-shortcuts-panel__key {
-    @apply inline-flex min-w-[2rem] items-center justify-center rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[0.65rem] font-semibold text-slate-700 shadow-sm;
+    @apply inline-flex min-w-[2rem] items-center justify-center rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[0.65rem] font-semibold text-slate-700;
   }
 
   .pos-shortcuts-panel__label {
@@ -190,7 +403,19 @@
   }
 
   .pos-list {
-    @apply max-h-64 divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50;
+    @apply max-h-64 divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-200 bg-white;
+  }
+
+  .pos-list-row {
+    @apply flex items-center justify-between gap-3 bg-white px-3 py-3 transition first:rounded-t-xl last:rounded-b-xl hover:bg-slate-50;
+  }
+
+  .pos-selected-panel {
+    @apply rounded-xl border border-slate-200 bg-slate-50 p-4;
+  }
+
+  .pos-icon-badge {
+    @apply flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700;
   }
 }
 

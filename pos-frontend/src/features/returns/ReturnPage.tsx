@@ -14,6 +14,7 @@ import {
 } from './PartialReturnForm'
 import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
 import { ErrorMessage } from '../../shared/components/ErrorMessage'
+import { PosPageHero } from '../../shared/components/PosPageHero'
 import type { Sale, ReturnItemRequest } from '../../core/types/sale.types'
 import { getErrorMessage } from '../../infrastructure/http/ApiError'
 
@@ -77,8 +78,8 @@ export function ReturnPage() {
 
   if (fetchError) {
     return (
-      <div className="mx-auto max-w-xl p-6">
-        <div className="pos-card border-red-100/70">
+      <div className="pos-page pos-page--medium">
+        <div className="pos-card pos-card--danger">
           <ErrorMessage message={fetchError} />
         </div>
       </div>
@@ -95,31 +96,19 @@ export function ReturnPage() {
   const fmt = (n: number) => `$${n.toLocaleString('es-CO')}`
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 sm:p-10">
-      <div className="mb-10 flex flex-wrap items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 to-red-600 shadow-lg shadow-orange-500/25">
-          <RotateCcw className="h-7 w-7 text-white" aria-hidden />
-        </div>
-        <div>
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-orange-600">
-            Devolución
-          </p>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Sale #{sale.id.slice(0, 10)}
-            {sale.id.length > 10 ? '…' : ''}
-          </h1>
-        </div>
-      </div>
+    <div className="pos-page pos-page--medium">
+      <PosPageHero
+        tone="violet"
+        eyebrow="Devolución"
+        icon={<RotateCcw className="h-7 w-7" aria-hidden />}
+        title={`Sale #${sale.id.slice(0, 10)}${sale.id.length > 10 ? '…' : ''}`}
+      />
 
-      <div className="mb-8 flex rounded-2xl border border-slate-200 bg-slate-100/70 p-1">
+      <div className="pos-segmented">
         <button
           type="button"
           onClick={() => setMode('full')}
-          className={`flex flex-1 items-center justify-center rounded-xl py-3.5 text-sm font-semibold transition ${
-            mode === 'full'
-              ? 'bg-white text-orange-700 shadow-md shadow-slate-200/50'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
+          className={`pos-segmented__btn ${mode === 'full' ? 'pos-segmented__btn--active' : ''}`}
           aria-pressed={mode === 'full'}
         >
           Total / Full
@@ -127,11 +116,7 @@ export function ReturnPage() {
         <button
           type="button"
           onClick={() => setMode('partial')}
-          className={`flex flex-1 items-center justify-center rounded-xl py-3.5 text-sm font-semibold transition ${
-            mode === 'partial'
-              ? 'bg-white text-orange-700 shadow-md shadow-slate-200/50'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
+          className={`pos-segmented__btn ${mode === 'partial' ? 'pos-segmented__btn--active' : ''}`}
           aria-pressed={mode === 'partial'}
         >
           Parcial / Partial

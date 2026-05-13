@@ -24,8 +24,8 @@ export function ReceiptPage() {
 
   if (error) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-6">
-        <div className="pos-card border-red-100/80">
+      <div className="pos-page pos-page--narrow flex min-h-screen flex-col justify-center">
+        <div className="pos-card pos-card--danger">
           <ErrorMessage message={error} />
         </div>
         <button
@@ -42,8 +42,8 @@ export function ReceiptPage() {
   if (!receipt) return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100/80 via-slate-50 to-white py-10">
-      <div className="mx-auto max-w-md px-4">
+    <div className="pos-receipt-shell">
+      <div className="pos-page pos-page--narrow">
         <ReceiptView receipt={receipt} />
 
         <div className="mt-8 flex flex-col gap-3">
@@ -60,7 +60,7 @@ export function ReceiptPage() {
             <button
               type="button"
               onClick={() => navigate(`/sale/${receipt.saleId}/return`)}
-              className="pos-btn-secondary w-full gap-2 border-orange-200 bg-orange-50/90 text-orange-900 hover:bg-orange-100"
+              className="pos-btn-secondary w-full gap-2"
             >
               <RotateCcw className="h-4 w-4" aria-hidden />
               Devolución / Return

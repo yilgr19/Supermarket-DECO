@@ -6,6 +6,7 @@ import { ArrowLeft, Package, Pencil, Trash2 } from 'lucide-react'
 import { useCatalogProducts } from './useCatalogProducts'
 import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
 import { ErrorMessage } from '../../shared/components/ErrorMessage'
+import { PosAppHeader } from '../../shared/components/PosAppHeader'
 import type { CatalogProductInput } from '../../core/types/catalogProduct.types'
 
 function FieldError({ message }: { message?: string }) {
@@ -31,7 +32,7 @@ function ProductFields({
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-slate-600">Nombre</label>
+        <label className="pos-field-label normal-case tracking-normal">Nombre</label>
         <input
           className="pos-input"
           value={values.nombre}
@@ -40,7 +41,7 @@ function ProductFields({
         <FieldError message={errors.nombre} />
       </div>
       <div className="sm:col-span-2">
-        <label className="mb-1.5 block text-xs font-medium text-slate-600">Descripción</label>
+        <label className="pos-field-label normal-case tracking-normal">Descripción</label>
         <input
           className="pos-input"
           value={values.descripcion}
@@ -49,7 +50,7 @@ function ProductFields({
         <FieldError message={errors.descripcion} />
       </div>
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-slate-600">Subcategoría</label>
+        <label className="pos-field-label normal-case tracking-normal">Subcategoría</label>
         <input
           className="pos-input"
           value={values.subcategoria}
@@ -58,7 +59,7 @@ function ProductFields({
         <FieldError message={errors.subcategoria} />
       </div>
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-slate-600">Precio</label>
+        <label className="pos-field-label normal-case tracking-normal">Precio</label>
         <input
           className="pos-input"
           type="number"
@@ -70,7 +71,7 @@ function ProductFields({
         <FieldError message={errors.precio} />
       </div>
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-slate-600">Precio x cantidad</label>
+        <label className="pos-field-label normal-case tracking-normal">Precio x cantidad</label>
         <input
           className="pos-input"
           type="number"
@@ -82,7 +83,7 @@ function ProductFields({
         <FieldError message={errors.precioxcantidad} />
       </div>
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-slate-600">Estado</label>
+        <label className="pos-field-label normal-case tracking-normal">Estado</label>
         <select
           className="pos-input"
           value={values.estado}
@@ -95,7 +96,7 @@ function ProductFields({
         <FieldError message={errors.estado} />
       </div>
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-slate-600">Código de barras</label>
+        <label className="pos-field-label normal-case tracking-normal">Código de barras</label>
         <input
           className="pos-input"
           value={values.barcode ?? ''}
@@ -105,7 +106,7 @@ function ProductFields({
         <FieldError message={errors.barcode} />
       </div>
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-slate-600">Stock disponible</label>
+        <label className="pos-field-label normal-case tracking-normal">Stock disponible</label>
         <input
           className="pos-input"
           type="number"
@@ -156,26 +157,20 @@ export function ProductsAdminPage() {
   } = useCatalogProducts()
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <header className="border-b border-slate-200 bg-white px-4 py-4 shadow-sm">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
-              <Package className="h-5 w-5" aria-hidden="true" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-slate-900">Catálogo de productos</h1>
-              <p className="text-xs text-slate-500">Administración del catálogo integrada al POS</p>
-            </div>
-          </div>
+    <div className="flex min-h-screen flex-col">
+      <PosAppHeader
+        icon={<Package className="h-5 w-5" aria-hidden="true" />}
+        title="Catálogo de productos"
+        subtitle="Administración del catálogo integrada al POS"
+        actions={
           <button type="button" className="pos-btn-secondary" onClick={() => navigate('/sale')}>
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Volver a venta
           </button>
-        </div>
-      </header>
+        }
+      />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+      <main className="pos-page pos-page--wide flex-1">
         {globalError && (
           <div className="mb-5">
             <ErrorMessage message={globalError} onRetry={() => undefined} />
@@ -184,7 +179,7 @@ export function ProductsAdminPage() {
 
         <section className="pos-card mb-8">
           <h2 className="pos-section-title">Agregar producto</h2>
-          <p className="mb-4 text-sm text-slate-500">
+          <p className="pos-section-lead">
             Completa la información; los precios deben ser positivos.
           </p>
           <ProductFields values={createForm} errors={createErrors} onChange={setCreateForm} />
@@ -202,7 +197,7 @@ export function ProductsAdminPage() {
           <h2 className="pos-section-title">Filtros y búsqueda</h2>
           <div className="flex flex-wrap items-end gap-3">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-600">Nombre (contiene)</label>
+              <label className="pos-field-label normal-case tracking-normal">Nombre (contiene)</label>
               <input
                 className="pos-input w-48 min-w-[10rem]"
                 value={filterDraft.nombre}
@@ -210,7 +205,7 @@ export function ProductsAdminPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-600">Subcategoría</label>
+              <label className="pos-field-label normal-case tracking-normal">Subcategoría</label>
               <select
                 className="pos-input w-48 min-w-[10rem]"
                 value={filterDraft.subcategoria}
@@ -225,7 +220,7 @@ export function ProductsAdminPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-600">Estado</label>
+              <label className="pos-field-label normal-case tracking-normal">Estado</label>
               <select
                 className="pos-input w-40"
                 value={filterDraft.estado}
@@ -248,7 +243,7 @@ export function ProductsAdminPage() {
               Limpiar
             </button>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-600">Por página</label>
+              <label className="pos-field-label normal-case tracking-normal">Por página</label>
               <select
                 className="pos-input"
                 value={query.limit}
@@ -268,9 +263,9 @@ export function ProductsAdminPage() {
               <LoadingSpinner label="Cargando lista…" />
             </div>
           )}
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
+          <div className="pos-table-wrap">
+            <table className="pos-table">
+              <thead>
                 <tr>
                   <th className="px-4 py-3">Nombre</th>
                   <th className="px-4 py-3">Descripción</th>
@@ -284,7 +279,7 @@ export function ProductsAdminPage() {
               </thead>
               <tbody>
                 {items.map((row) => (
-                  <tr key={row.id} className="border-b border-slate-100">
+                  <tr key={row.id}>
                     <td className="px-4 py-3 font-medium text-slate-900">{row.nombre}</td>
                     <td className="px-4 py-3 text-slate-600">{row.descripcion}</td>
                     <td className="px-4 py-3">{row.subcategoria}</td>
@@ -316,7 +311,7 @@ export function ProductsAdminPage() {
                 ))}
                 {!isLoading && items.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={8} className="pos-table__empty">
                       No hay productos con los filtros actuales.
                     </td>
                   </tr>
@@ -324,7 +319,7 @@ export function ProductsAdminPage() {
               </tbody>
             </table>
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50/50 px-4 py-3 text-sm">
+          <div className="pos-table-footer">
             <p className="text-slate-600">{paginationLabel}</p>
             <div className="flex gap-2">
               <button
@@ -349,10 +344,11 @@ export function ProductsAdminPage() {
       </main>
 
       {editOpen && editForm && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[2px]">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-            <h3 className="mb-1 text-lg font-semibold text-slate-900">Editar producto</h3>
-            <p className="mb-5 text-xs text-slate-500">Modifica los datos y guarda los cambios.</p>
+        <div className="pos-modal-backdrop">
+          <div className="pos-modal-panel max-w-lg">
+            <p className="pos-modal-eyebrow">Edición</p>
+            <h3 className="pos-modal-title">Editar producto</h3>
+            <p className="pos-section-lead">Modifica los datos y guarda los cambios.</p>
             <ProductFields values={editForm} errors={editErrors} onChange={setEditForm} />
             <div className="mt-6 flex justify-end gap-2 border-t border-slate-100 pt-4">
               <button type="button" className="pos-btn-secondary" onClick={closeEdit}>
