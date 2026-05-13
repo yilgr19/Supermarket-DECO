@@ -9,7 +9,7 @@ import { useSale } from './useSale';
 import { useSaleStore } from '../../infrastructure/store/saleStore';
 import { useSessionStore } from '../../infrastructure/store/sessionStore';
 
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'http://localhost:8088';
 
 const mockSale = {
   id: 'sale-1',

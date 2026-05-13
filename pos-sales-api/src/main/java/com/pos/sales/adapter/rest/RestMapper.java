@@ -5,6 +5,9 @@ import com.pos.sales.adapter.external.InMemoryProductCatalog;
 import com.pos.sales.adapter.rest.dto.*;
 import com.pos.sales.domain.model.*;
 
+import com.pos.sales.domain.model.ProductEntity;
+
+import java.util.List;
 import java.util.stream.Collectors;
 
 public final class RestMapper {
@@ -88,6 +91,17 @@ public final class RestMapper {
         );
     }
 
+    public static ProductDto toProduct(ProductEntity p) {
+        return new ProductDto(
+                String.valueOf(p.getId()),
+                p.getNombre(),
+                p.getBarcode(),
+                p.getPrecio().doubleValue(),
+                p.getAvailableStock(),
+                p.getSubcategoria()
+        );
+    }
+
     public static ProductDto toProduct(InMemoryProductCatalog.CatalogEntry e, int stock) {
         return new ProductDto(
                 e.id(),
@@ -96,6 +110,20 @@ public final class RestMapper {
                 e.unitPrice().doubleValue(),
                 stock,
                 e.category()
+        );
+    }
+
+    public static CatalogProductDto toCatalogProduct(ProductEntity p) {
+        return new CatalogProductDto(
+                p.getId(),
+                p.getNombre(),
+                p.getDescripcion(),
+                p.getSubcategoria(),
+                p.getPrecio().doubleValue(),
+                p.getPrecioxcantidad().doubleValue(),
+                p.getEstado().name(),
+                p.getBarcode(),
+                p.getAvailableStock()
         );
     }
 

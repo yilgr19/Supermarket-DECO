@@ -17,7 +17,7 @@ describe('ProductSearch', () => {
 
   it('shows no results message when query returns empty', async () => {
     server.use(
-      http.get('http://localhost:8080/api/v1/products/search', () =>
+      http.get('http://localhost:8088/api/v1/products/search', () =>
         HttpResponse.json([])
       )
     )
@@ -32,7 +32,7 @@ describe('ProductSearch', () => {
 
   it('shows error message on 503', async () => {
     server.use(
-      http.get('http://localhost:8080/api/v1/products/search', () =>
+      http.get('http://localhost:8088/api/v1/products/search', () =>
         HttpResponse.json({ message: 'Service unavailable' }, { status: 503 })
       )
     )
@@ -51,7 +51,7 @@ describe('ProductSearch', () => {
       target: { value: 'le' },
     })
     await waitFor(() => {
-      expect(screen.getByText(/\s·\sresult/i)).toBeInTheDocument()
+      expect(screen.getByText('Leche Entera')).toBeInTheDocument()
     }, { timeout: 1000 })
     const addBtn = screen.getByRole('button', { name: /Agregar/i })
     fireEvent.click(addBtn)

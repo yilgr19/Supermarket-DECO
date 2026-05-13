@@ -7,7 +7,7 @@ import { setupServer } from 'msw/node';
 import axiosInstance from './axiosClient'
 import { ApiError } from './ApiError'
 
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'http://localhost:8088';
 
 const server = setupServer();
 

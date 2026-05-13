@@ -5,8 +5,24 @@ import axios from 'axios'
 import { ApiError } from './ApiError'
 import { useSessionStore } from '../store/sessionStore'
 
+export function resolveSalesApiBaseUrl(): string {
+  const configured = import.meta.env.VITE_SALES_API_URL?.trim()
+  const useMsw =
+    String(import.meta.env.VITE_USE_MSW ?? 'true').toLowerCase() === 'true'
+
+  if (import.meta.env.MODE === 'test') {
+    return configured || 'http://localhost:8088'
+  }
+
+  if (import.meta.env.DEV && !useMsw) {
+    return configured || ''
+  }
+
+  return configured || 'http://localhost:8088'
+}
+
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_SALES_API_URL || 'http://localhost:8080',
+  baseURL: resolveSalesApiBaseUrl(),
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

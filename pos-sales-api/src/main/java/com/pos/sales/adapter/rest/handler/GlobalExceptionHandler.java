@@ -70,6 +70,23 @@ public class GlobalExceptionHandler {
         return body(HttpStatus.BAD_REQUEST, ex.getMessage(), null);
     }
 
+    @ExceptionHandler(ProductValidationException.class)
+    public ResponseEntity<Map<String, Object>> productValidation(ProductValidationException ex) {
+        List<Map<String, String>> details = ex.getDetails().stream()
+                .map(d -> {
+                    Map<String, String> row = new LinkedHashMap<>();
+                    row.put("field", d.field());
+                    row.put("message", d.message());
+                    return row;
+                })
+                .collect(Collectors.toList());
+        Map<String, Object> error = new LinkedHashMap<>();
+        error.put("code", "VALIDATION_ERROR");
+        error.put("message", ex.getMessage());
+        error.put("details", details);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", error));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> illegalArg(IllegalArgumentException ex) {
         return body(HttpStatus.BAD_REQUEST, ex.getMessage(), null);

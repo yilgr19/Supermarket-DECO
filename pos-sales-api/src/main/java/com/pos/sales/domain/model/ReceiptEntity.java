@@ -230,6 +230,10 @@ public class ReceiptEntity {
         return createdAt;
     }
 
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public List<ReceiptLineEntity> getLines() {
         return lines;
     }

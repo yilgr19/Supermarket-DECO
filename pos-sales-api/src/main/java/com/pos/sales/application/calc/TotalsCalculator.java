@@ -1,5 +1,6 @@
 package com.pos.sales.application.calc;
 
+import com.pos.sales.application.exception.DiscountExceedsSubtotalException;
 import com.pos.sales.application.dto.MoneyTotals;
 import com.pos.sales.domain.model.DiscountType;
 import com.pos.sales.domain.model.SaleEntity;

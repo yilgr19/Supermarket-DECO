@@ -8,7 +8,7 @@ import { server } from '../../mocks/server';
 import { useCheckout } from './useCheckout';
 import { useSaleStore } from '../../infrastructure/store/saleStore';
 
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'http://localhost:8088';
 
 const mockSale = {
   id: 'sale-1',

@@ -27,6 +27,10 @@ export function CartPanel({
 
   const isEditable = sale?.status === 'ACTIVE'
 
+  if (!sale && isLoading) {
+    return null
+  }
+
   if (!sale || sale.items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/70 py-16 text-center">

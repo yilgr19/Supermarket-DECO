@@ -19,8 +19,16 @@ import {
   mockResume,
   mockUpdateItem,
 } from './mockSaleBackend'
+import {
+  mockCatalogByBarcode,
+  mockCatalogCreate,
+  mockCatalogDelete,
+  mockCatalogList,
+  mockCatalogSearchPos,
+  mockCatalogUpdate,
+} from './mockCatalogBackend'
 
-const BASE = 'http://localhost:8080'
+const BASE = 'http://localhost:8088'
 
 function cashierFrom(request: Request): string {
   return request.headers.get('X-Cashier-Id') || 'CAJERO-DEMO'
@@ -31,30 +39,45 @@ export const handlers = [
   http.get(`${BASE}/api/v1/products/search`, ({ request }) => {
     const url = new URL(request.url)
     const name = url.searchParams.get('name') ?? ''
-    return HttpResponse.json([
-      {
-        id: 'prod-1',
-        name: name ? `${name.trim()} · result` : 'Leche Entera',
-        barcode: '7501234567890',
-        unitPrice: 2400,
-        availableStock: 50,
-        category: 'Lácteos',
-      },
-    ])
+    return HttpResponse.json(mockCatalogSearchPos(name))
   }),
 
   http.get(`${BASE}/api/v1/products/barcode/:barcode`, ({ params }) => {
     if (params.barcode === '0000000000000') {
       return HttpResponse.json({ message: 'Product not found' }, { status: 404 })
     }
-    return HttpResponse.json({
-      id: 'prod-1',
-      name: 'Leche Entera',
-      barcode: params.barcode,
-      unitPrice: 2400,
-      availableStock: 50,
-      category: 'Lácteos',
-    })
+    const product = mockCatalogByBarcode(String(params.barcode))
+    if (!product) {
+      return HttpResponse.json({ message: 'Product not found' }, { status: 404 })
+    }
+    return HttpResponse.json(product)
+  }),
+
+  http.get(`${BASE}/api/v1/products`, ({ request }) => {
+    const url = new URL(request.url)
+    return HttpResponse.json(mockCatalogList(url.searchParams))
+  }),
+
+  http.post(`${BASE}/api/v1/products`, async ({ request }) => {
+    const body = (await request.json()) as import('../core/types/catalogProduct.types').CatalogProductInput
+    const created = mockCatalogCreate(body)
+    return HttpResponse.json({ data: created }, { status: 201 })
+  }),
+
+  http.put(`${BASE}/api/v1/products/:id`, async ({ params, request }) => {
+    const id = Number(params.id)
+    const body = (await request.json()) as import('../core/types/catalogProduct.types').CatalogProductInput
+    const updated = mockCatalogUpdate(id, body)
+    if (!updated) return HttpResponse.json({ message: 'Product not found' }, { status: 404 })
+    return HttpResponse.json({ data: updated })
+  }),
+
+  http.delete(`${BASE}/api/v1/products/:id`, ({ params }) => {
+    const id = Number(params.id)
+    if (!mockCatalogDelete(id)) {
+      return HttpResponse.json({ message: 'Product not found' }, { status: 404 })
+    }
+    return HttpResponse.json({ data: { message: 'Producto eliminado exitosamente' } })
   }),
 
   // --- Customer API ---

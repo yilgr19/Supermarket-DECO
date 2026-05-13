@@ -10,7 +10,7 @@ import { server } from '../../mocks/server'
 import { CheckoutModal } from './CheckoutModal'
 import { useSaleStore } from '../../infrastructure/store/saleStore'
 
-const BASE_URL = 'http://localhost:8080'
+const BASE_URL = 'http://localhost:8088'
 
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {

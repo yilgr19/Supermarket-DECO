@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Snowflake, XCircle, ShoppingBag, LogOut, List } from 'lucide-react'
+import { Snowflake, XCircle, ShoppingBag, LogOut, List, Package } from 'lucide-react'
 import { useSale } from './useSale'
 import { CartPanel } from './CartPanel'
 import { TotalsSummary } from './TotalsSummary'
@@ -47,10 +47,10 @@ export function SalePage() {
   // ES: Crear venta automáticamente al montar si no hay una activa
   // EN: Auto-create sale on mount if none is active
   useEffect(() => {
-    if (!activeSale) {
-      createSale()
+    if (!activeSale && terminalId) {
+      void createSale()
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeSale, terminalId, createSale])
 
   const handleAddProduct = async (product: Product) => {
     await addItemToSale(product.id, undefined, 1)
@@ -111,6 +111,14 @@ export function SalePage() {
           <div className="flex shrink-0 items-center gap-1">
             {activeSale && <SaleStatusBadge status={activeSale.status} />}
             <button
+              onClick={() => navigate('/products')}
+              className="pos-btn-quiet"
+              aria-label="Administrar catálogo / Manage catalog"
+              type="button"
+            >
+              <Package className="h-5 w-5" />
+            </button>
+            <button
               onClick={() => navigate('/sale/frozen')}
               className="pos-btn-quiet"
               aria-label="Ver ventas congeladas / View frozen sales"
@@ -170,7 +178,13 @@ export function SalePage() {
             )}
 
             {error && !isLoading && (
-              <ErrorMessage message={error.message ?? ''} onRetry={clearError} />
+              <ErrorMessage
+                message={error.message ?? ''}
+                onRetry={() => {
+                  clearError()
+                  void createSale()
+                }}
+              />
             )}
 
             <CartPanel

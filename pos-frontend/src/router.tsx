@@ -7,6 +7,7 @@ import { SalePage } from './features/sale/SalePage'
 import { FrozenSalesList } from './features/sale/FrozenSalesList'
 import { ReceiptPage } from './features/receipts/ReceiptPage'
 import { ReturnPage } from './features/returns/ReturnPage'
+import { ProductsAdminPage } from './features/products-admin/ProductsAdminPage'
 import { ProtectedRoute } from './shared/components/ProtectedRoute'
 
 export function AppRouter() {
@@ -42,6 +43,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <ReturnPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/products"
+        element={
+          <ProtectedRoute>
+            <ProductsAdminPage />
           </ProtectedRoute>
         }
       />
