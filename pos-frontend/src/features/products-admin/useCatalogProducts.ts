@@ -21,7 +21,6 @@ const EMPTY_FORM: CatalogProductInput = {
   precioxcantidad: 0,
   estado: 'activo',
   barcode: '',
-  availableStock: 0,
 }
 
 const INITIAL_QUERY: CatalogProductListFilters = {

@@ -51,6 +51,19 @@
     @apply hover:bg-white hover:bg-opacity-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-40;
   }
 
+  .pos-header-frozen-btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-sky-300/25 bg-sky-400/10 px-3 text-sm font-semibold text-sky-50 transition;
+    @apply hover:border-sky-200/40 hover:bg-sky-400/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900;
+  }
+
+  .pos-header-frozen-btn__label {
+    @apply hidden max-w-[7.5rem] truncate sm:inline;
+  }
+
+  .pos-header-frozen-btn__hint {
+    @apply hidden text-[0.65rem] font-medium uppercase tracking-wide text-sky-200/80 md:inline;
+  }
+
   .pos-btn-danger {
     @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 shadow-sm transition;
     @apply hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 focus-visible:ring-offset-2 disabled:opacity-40;

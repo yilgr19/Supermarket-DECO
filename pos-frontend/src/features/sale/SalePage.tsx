@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Snowflake, XCircle, ShoppingBag, LogOut, List, Package, Search, UserSearch, UserCheck } from 'lucide-react'
+import { Snowflake, XCircle, ShoppingBag, LogOut, Package, Search, UserSearch, UserCheck } from 'lucide-react'
 import { useSale } from './useSale'
 import { CartPanel } from './CartPanel'
 import { TotalsSummary } from './TotalsSummary'
@@ -118,11 +118,14 @@ export function SalePage() {
             </button>
             <button
               onClick={() => navigate('/sale/frozen')}
-              className="pos-btn-quiet"
+              className="pos-header-frozen-btn"
               aria-label="Ver ventas congeladas / View frozen sales"
+              title="Ver ventas congeladas / View frozen sales"
               type="button"
             >
-              <List className="h-5 w-5" />
+              <Snowflake className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="pos-header-frozen-btn__label">Congeladas</span>
+              <span className="pos-header-frozen-btn__hint">Frozen</span>
             </button>
             <button
               onClick={handleLogout}

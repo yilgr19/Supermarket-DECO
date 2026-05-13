@@ -110,8 +110,13 @@ function ProductFields({
           className="pos-input"
           type="number"
           min={0}
-          value={values.availableStock ?? 0}
-          onChange={(e) => patch({ availableStock: Number(e.target.value) })}
+          value={values.availableStock ?? ''}
+          onChange={(e) =>
+            patch({
+              availableStock: e.target.value === '' ? undefined : Number(e.target.value),
+            })
+          }
+          placeholder="Ej: 35"
         />
         <FieldError message={errors.availableStock} />
       </div>
