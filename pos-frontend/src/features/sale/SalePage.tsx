@@ -1,7 +1,7 @@
 // ES: Pantalla principal de venta POS
 // EN: Main POS sale screen
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Snowflake, XCircle, ShoppingBag, LogOut, Package, Search, UserSearch, UserCheck } from 'lucide-react'
 import { useSale } from './useSale'
@@ -11,6 +11,8 @@ import { CancelDialog } from './CancelDialog'
 import { ProductSearchModal } from '../products/ProductSearchModal'
 import { CustomerSearchModal } from '../customers/CustomerSearchModal'
 import { CheckoutModal } from '../checkout/CheckoutModal'
+import { SaleKeyboardShortcutsHelp } from './SaleKeyboardShortcutsHelp'
+import { useSaleKeyboardShortcuts } from './useSaleKeyboardShortcuts'
 import { SaleStatusBadge } from '../../shared/components/StatusBadge'
 import { ErrorMessage } from '../../shared/components/ErrorMessage'
 import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
@@ -69,9 +71,9 @@ export function SalePage() {
     await applyItemDiscount(itemId, 'FIXED_AMOUNT', 0)
   }
 
-  const handleFreeze = async () => {
+  const handleFreeze = useCallback(async () => {
     await freezeSale()
-  }
+  }, [freezeSale])
 
   const handleCancel = async (reason: string) => {
     await cancelSale(reason)
@@ -86,6 +88,59 @@ export function SalePage() {
   const isActive = activeSale?.status === 'ACTIVE'
   const isFrozenOrActive =
     activeSale?.status === 'ACTIVE' || activeSale?.status === 'FROZEN'
+  const modalOpen =
+    showCheckout || showCancelDialog || showProductSearch || showCustomerSearch
+
+  const closeModals = useCallback(() => {
+    if (showCheckout) {
+      setShowCheckout(false)
+      return
+    }
+    if (showCancelDialog) {
+      setShowCancelDialog(false)
+      return
+    }
+    if (showProductSearch) {
+      setShowProductSearch(false)
+      return
+    }
+    if (showCustomerSearch) {
+      setShowCustomerSearch(false)
+    }
+  }, [showCancelDialog, showCheckout, showCustomerSearch, showProductSearch])
+
+  const shortcutAvailability = useMemo(
+    () => ({
+      productSearch: isActive && !isLoading,
+      customerSearch: isActive && !isLoading,
+      checkout: Boolean(isActive && !isLoading && activeSale && activeSale.items.length > 0),
+      freeze: isActive && !isLoading,
+      cancel: isFrozenOrActive && !isLoading,
+      frozenSales: true,
+      catalog: true,
+      logout: true,
+    }),
+    [activeSale, isActive, isFrozenOrActive, isLoading]
+  )
+
+  const shortcutHandlers = useMemo(
+    () => ({
+      onProductSearch: () => setShowProductSearch(true),
+      onCustomerSearch: () => setShowCustomerSearch(true),
+      onCheckout: () => setShowCheckout(true),
+      onFreeze: () => {
+        void handleFreeze()
+      },
+      onCancel: () => setShowCancelDialog(true),
+      onFrozenSales: () => navigate('/sale/frozen'),
+      onCatalog: () => navigate('/products'),
+      onLogout: handleLogout,
+      onCloseModals: closeModals,
+    }),
+    [closeModals, handleFreeze, handleLogout, navigate]
+  )
+
+  useSaleKeyboardShortcuts(shortcutHandlers, shortcutAvailability, modalOpen)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -299,6 +354,8 @@ export function SalePage() {
         onClose={() => setShowCheckout(false)}
         selectedCustomer={selectedCustomer}
       />
+
+      <SaleKeyboardShortcutsHelp availability={shortcutAvailability} />
     </div>
   )
 }
