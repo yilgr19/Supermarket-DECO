@@ -30,5 +30,5 @@ Orden de implementación (Spec-Driven Development).
 - [ ] 6. Entrega docente
   - [x] 6.1 Capturas Postman (GET productos, POST ventas, error 400)
   - [x] 6.2 Captura `mvn test` exitoso
-  - [ ] 6.3 Repositorio GitHub público (push con evidencias)
+  - [x] 6.3 Repositorio GitHub público (push con evidencias)
   - [ ] 6.4 `sam deploy` AWS real (opcional si solo LocalStack en taller)
