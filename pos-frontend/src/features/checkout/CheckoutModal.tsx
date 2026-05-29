@@ -11,6 +11,7 @@ import { ErrorMessage } from '../../shared/components/ErrorMessage'
 import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
 import type { Customer } from '../../core/types/customer.types'
 import { isLambdaBackend } from '../../adapters/http/resolvePorts'
+import { warmUpVentasLambdaAsync } from '../../infrastructure/http/lambdaWarmup'
 import { formatCop } from '../../shared/utils/formatCurrency'
 
 interface CheckoutModalProps {
@@ -35,6 +36,7 @@ export function CheckoutModal({ isOpen, onClose, selectedCustomer }: CheckoutMod
   const fmt = formatCop
 
   const handleCash = async () => {
+    if (isLambdaBackend) await warmUpVentasLambdaAsync()
     const receipt = await checkoutCash(received)
     if (receipt) {
       navigate(`/receipt/${receipt.transactionId}`)
@@ -147,6 +149,13 @@ export function CheckoutModal({ isOpen, onClose, selectedCustomer }: CheckoutMod
               <ErrorMessage message={error.message ?? ''} onRetry={clearError} />
             )}
           </div>
+        )}
+
+        {isLoading && isLambdaBackend && (
+          <p className="mt-4 text-center text-xs text-slate-500">
+            Conectando con el servidor… La primera venta puede tardar unos segundos mientras inicia
+            la Lambda.
+          </p>
         )}
 
         <div className="mt-8 flex gap-3 border-t border-slate-100 pt-6">

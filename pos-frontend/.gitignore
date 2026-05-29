@@ -29,6 +29,8 @@ dist-ssr
 # Env local (el ejemplo se versiona)
 .env
 .env.*.local
+.env.development
+.lambda-base-url
 
 # Playwright / cobertura
 playwright-report/

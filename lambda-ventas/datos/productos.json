@@ -26,6 +26,15 @@
       "stock_disponible": 30,
       "estado": "activo",
       "codigo_barras": "770444555666"
+    },
+    {
+      "id": "prod-004",
+      "nombre": "Shampoo 500ml",
+      "descripcion": "Aseo personal",
+      "precio": 15000,
+      "stock_disponible": 20,
+      "estado": "activo",
+      "codigo_barras": "770777888999"
     }
   ]
 }

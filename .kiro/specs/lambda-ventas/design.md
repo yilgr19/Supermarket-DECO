@@ -37,7 +37,7 @@ API Gateway SupermarketAPI (stage prod)
 | id | String (PK) | ej. prod-001 |
 | nombre | String | |
 | precio | Number | |
-| stock_disponible | Number | no se decrementa en v1 |
+| stock_disponible | Number | se decrementa al registrar venta (UpdateItem atómico) |
 | estado | String | activo/inactivo |
 | descripcion | String | opcional |
 | codigo_barras | String | opcional |
@@ -57,7 +57,7 @@ API Gateway SupermarketAPI (stage prod)
 ## Handlers
 
 - `ProductosHandler`: inyección de `DynamoDB` para tests; scan (lista) o getItem (por id)
-- `VentaHandler`: valida payload, calcula totales, putItem en Ventas
+- `VentaHandler`: valida payload, **valida y descuenta stock** en Productos (`descontarStock`), calcula totales, putItem en Ventas
 - `DynamoDbClientFactory`: singleton; endpoint LocalStack vía `DYNAMODB_ENDPOINT`
 - `ApiResponse`: helpers JSON + CORS
 
@@ -82,6 +82,17 @@ lambda-ventas/
 └── scripts/arrancar.sh
 ```
 
+## Descuento de stock (`VentaHandler.descontarStock`)
+
+1. Agrupa cantidades por `id` de producto en el body.
+2. Para cada producto: `GetItem` en tabla Productos; si no existe → 409.
+3. Si `stock_disponible < cantidad solicitada` → HTTP **409** con mensaje identificando producto y stock disponible.
+4. Si pasa validación: `UpdateItem` con:
+   - `SET stock_disponible = stock_disponible - :q`
+   - `ConditionExpression: stock_disponible >= :q` (evita condiciones de carrera)
+5. Si la condición falla → 409.
+6. Solo después persiste la venta en tabla Ventas.
+
 ## Integración frontend
 
-Variable `VITE_API_BASE_URL` en `pos-frontend/.env.development` apunta a la URL base anterior. Adaptadores: `lambdaProductApiAdapter`, `lambdaSaleApiAdapter`.
+Variable `VITE_API_BASE_URL` en `pos-frontend/.env.development` apunta a la URL base anterior. Adaptadores: `lambdaProductApiAdapter`, `lambdaSaleApiAdapter`. Tras checkout exitoso el frontend invalida caché del catálogo para reflejar stock actualizado.

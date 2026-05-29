@@ -37,7 +37,7 @@ Backend serverless para el POS de supermercado: **API Gateway + 2 Lambdas Java 1
   ```
 - **Validaciones:** items no vacío; cada ítem con id, nombre, precio, cantidad > 0; descuento ≥ 0 y ≤ subtotal
 - **Cálculo:** IVA 19% redondeado sobre (subtotal − descuento); total = base + IVA
-- **Persistencia:** `PutItem` en tabla `Ventas` (PK `idVenta`)
+- **Persistencia:** `PutItem` en tabla `Ventas` (PK `idVenta`); descuenta `stock_disponible` en tabla `Productos`
 - **Respuesta 201:**
   ```json
   {
@@ -50,7 +50,8 @@ Backend serverless para el POS de supermercado: **API Gateway + 2 Lambdas Java 1
     "total": 6
   }
   ```
-- **Errores:** 400 body inválido, 405 método incorrecto, 500 error DynamoDB
+- **Stock:** antes de persistir la venta, valida `stock_disponible` por producto; descuenta con `UpdateItem` atómico en tabla `Productos`; cantidades del mismo `id` se suman
+- **Errores:** 400 body inválido, **409 stock insuficiente**, 405 método incorrecto, 500 error DynamoDB
 
 ### RF-4: CORS
 
@@ -81,11 +82,12 @@ Backend serverless para el POS de supermercado: **API Gateway + 2 Lambdas Java 1
 
 | ID | Escenario | Entrada | Resultado esperado |
 |----|-----------|---------|-------------------|
-| VT-1 | Venta válida | POST body con items | HTTP 201, idVenta, totales, putItem |
+| VT-1 | Venta válida | POST body con items, stock suficiente | HTTP 201, idVenta, totales, putItem, updateItem stock |
 | VT-2 | Body vacío | POST sin body | HTTP 400 |
 | VT-3 | Items vacíos | POST `{ "items": [] }` | HTTP 400 |
 | VT-4 | Ítem incompleto | POST sin cantidad | HTTP 400 |
 | VT-5 | Error conexión DynamoDB | putItem lanza excepción | HTTP 500 |
+| VT-6 | Stock insuficiente | POST con cantidad > stock_disponible | HTTP 409, mensaje con stock disponible, sin putItem en Ventas |
 
 ---
 
@@ -93,5 +95,4 @@ Backend serverless para el POS de supermercado: **API Gateway + 2 Lambdas Java 1
 
 - CRUD productos vía Lambda
 - Historial GET ventas
-- Descuento de stock en tabla Productos al vender
 - Autenticación IAM en API Gateway

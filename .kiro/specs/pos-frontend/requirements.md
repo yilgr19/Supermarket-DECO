@@ -331,6 +331,8 @@
 3. **ES:** SI el API retorna error (`{ "error": "..." }`), LA UI DEBERÁ mostrar mensaje claro al cajero.
 4. **ES:** LA URL base del API DEBERÁ leerse de `VITE_API_BASE_URL` (archivo `.env`), no hardcodeada en componentes.
 5. **ES:** Funciones sin endpoint Lambda (congelar, devoluciones, CRUD catálogo) DEBERÁN ocultarse o mostrar mensaje de no disponible.
+6. **ES:** CUANDO el backend Lambda responde HTTP 409 por stock insuficiente, LA UI DEBERÁ mostrar el error al cajero (mensaje y/o lista de ítems afectados).
+7. **ES:** CUANDO un checkout en modo Lambda es exitoso, LA UI DEBERÁ recargar el catálogo para reflejar el `stock_disponible` actualizado en DynamoDB.
 
 **Referencia backend:** `.kiro/specs/lambda-ventas/requirements.md`
 

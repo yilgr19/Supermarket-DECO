@@ -2,76 +2,62 @@
 
 Backend serverless del POS: **API Gateway**, Lambdas **`productos-get`** y **`ventas-post`**, tablas DynamoDB **Productos** y **Ventas**.
 
-Especificaciones SDD: [`.kiro/specs/lambda-ventas/`](../.kiro/specs/lambda-ventas/) (requirements, design, tasks).
+Monorepo: [Supermarket-DECO](../README.md) · Specs SDD: [`.kiro/specs/lambda-ventas/`](../.kiro/specs/lambda-ventas/)
 
 ## Arquitectura
 
 ```
-Frontend (pos-frontend) ──HTTP──► API Gateway SupermarketAPI
-                                        ├── GET  /api/productos[/{id}]  → productos-get
-                                        └── POST /api/v1/ventas         → ventas-post
-                                                    │
-                                                    ▼
-                                              DynamoDB Productos / Ventas
+pos-frontend ──HTTP──► API Gateway SupermarketAPI
+                           ├── GET  /api/productos[/{id}]  → productos-get
+                           └── POST /api/v1/ventas         → ventas-post
+                                         │
+                                         ▼
+                                   DynamoDB Productos / Ventas
+                                   (ventas-post descuenta stock)
 ```
 
-## Requisitos
+## Despliegue (LocalStack)
 
-- JDK 17, Maven 3.9+, AWS SAM CLI
-- LocalStack (desarrollo) o cuenta AWS (producción)
-- AWS CLI configurado (`AWS_PROFILE=localstack` en LocalStack)
-
-## Despliegue local (LocalStack / WSL)
+Desde la **raíz del monorepo** (`supermarket/`), Git Bash o WSL:
 
 ```bash
-export AWS_PROFILE=localstack
-export AWS_DEFAULT_REGION=us-east-1
+export AWS_PROFILE=localstack AWS_DEFAULT_REGION=us-east-1 AWS_ENDPOINT_URL=http://localhost:4566
 
-# Opción A: script completo
-./scripts/arrancar.sh
-
-# Opción B: manual (si CloudFormation falla en LocalStack)
-bash ../scripts/localstack-deploy-lambdas.sh   # desde monorepo supermarket
-bash ../scripts/localstack-setup-api.sh
+bash scripts/build-and-deploy-lambdas.sh   # compilar + desplegar
+bash scripts/localstack-setup-api.sh       # tablas + catálogo + API Gateway
 ```
 
-Build y deploy SAM:
+Solo actualizar JAR tras cambios en Java:
 
 ```bash
-sam build --template-file template.yml
-sam deploy --config-env localstack --no-confirm-changeset --no-fail-on-empty-changeset
+bash scripts/localstack-deploy-lambdas.sh
 ```
 
-## URL base API Gateway
+> Git Bash sin AWS CLI: los scripts en `scripts/lib/aws-local.sh` usan `wsl aws` automáticamente.
 
-Tras desplegar, obtener el API ID:
-
-```bash
-aws --endpoint-url=http://localhost:4566 apigateway get-rest-apis --output json
-```
-
-URL LocalStack:
+### URL base API Gateway
 
 ```text
 http://localhost:4566/restapis/<API_ID>/prod/_user_request_
 ```
 
-Copiar a `pos-frontend/.env.development`:
+Copiar a `pos-frontend/.env.development` como `VITE_API_BASE_URL`.
 
-```env
-VITE_API_BASE_URL=http://localhost:4566/restapis/<API_ID>/prod/_user_request_
-VITE_USE_MSW=false
+Ejemplo activo en desarrollo:
+
+```text
+http://localhost:4566/restapis/s2arvqarhx/prod/_user_request_
 ```
 
 ## Endpoints
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/api/productos` | Lista catálogo |
-| GET | `/api/productos/{id}` | Detalle producto |
-| POST | `/api/v1/ventas` | Registrar venta |
+| Método | Ruta | Handler | Descripción |
+|--------|------|---------|-------------|
+| GET | `/api/productos` | ProductosHandler | Lista catálogo (scan DynamoDB) |
+| GET | `/api/productos/{id}` | ProductosHandler | Detalle o 404 |
+| POST | `/api/v1/ventas` | VentaHandler | Registra venta, descuenta stock, IVA 19% |
 
-### Ejemplo POST venta (curl / Postman)
+### Ejemplo POST venta
 
 ```bash
 curl -X POST "${BASE_URL}/api/v1/ventas" \
@@ -84,84 +70,62 @@ curl -X POST "${BASE_URL}/api/v1/ventas" \
   }'
 ```
 
-## URL base activa (LocalStack)
+Respuesta **201** o **409** si stock insuficiente.
 
-```text
-http://localhost:4566/restapis/s2arvqarhx/prod/_user_request_
+## Catálogo (`datos/productos.json`)
+
+El JSON **no se lee en runtime**. Es semilla para DynamoDB.
+
+```bash
+# Tras agregar/editar productos en el JSON
+bash scripts/seed-catalog.sh
 ```
 
-Variable Postman `base_url` = URL anterior sin barra final.
+Catálogo inicial también se carga con `localstack-setup-api.sh`.
 
-## Evidencias de entrega
+Precios de ejemplo (COP): Arroz 4500, Leche 5200, Pan 6800, Shampoo 15000.
 
-### Postman (`docs/postman/`)
+## Verificar ventas
 
-| Captura | Endpoint | Resultado |
-|---------|----------|-----------|
-| [Get productos.png](../docs/postman/Get%20productos.png) | GET `/api/productos` | 200 OK |
-| [get productos id.png](../docs/postman/get%20productos%20id.png) | GET `/api/productos/prod-001` | 200 OK |
-| [Get producto no encontrado.png](../docs/postman/Get%20producto%20no%20encontrado.png) | GET `/api/productos/prod-999` | 404 |
-| [post ventas exito.png](../docs/postman/post%20ventas%20exito.png) | POST `/api/v1/ventas` | 201 Created |
-| [post venta error.png](../docs/postman/post%20venta%20error.png) | POST body inválido | 400 Bad Request |
+```bash
+bash scripts/consultar-venta.sh VNT-1780078872579   # una venta
+bash scripts/consultar-venta.sh                      # todas
+```
 
-### Pruebas unitarias y verificación (`docs/test.env/`)
-
-| Captura | Descripción |
-|---------|-------------|
-| [Test wsl.png](../docs/test.env/Test%20%20wsl.png) | `mvn test` — BUILD SUCCESS, 10 tests |
-| [consultar venta realizada postman.png](../docs/test.env/consultar%20venta%20realizada%20postman.png) | Venta `VNT-1780072628946` en DynamoDB |
-| [.env.development.png](../docs/test.env/.env.development.png) | Configuración `VITE_API_BASE_URL` en frontend |
+Ver [README raíz § Verificación operativa](../README.md#verificación-operativa).
 
 ## Pruebas unitarias
 
 DynamoDB se **mockea** con Mockito (sin LocalStack en tests):
 
 ```bash
-mvn test
+# WSL
+cd lambda-ventas && mvn test
+
+# Windows (si falla C:\Users\...\.m2)
+cd lambda-ventas && .\mvn-test.ps1
 ```
 
-Casos cubiertos (ver `requirements.md` § Criterios de aceptación):
+**11 tests:** PT-1…PT-4 (productos) · VT-1…VT-6 (ventas, incluye stock 409).
 
-- Productos: catálogo OK, tabla vacía, 404, error conexión
-- Ventas: registro OK, body inválido, items vacíos, error conexión
+Captura de referencia: [`docs/test.env/Test wsl.png`](../docs/test.env/Test%20%20wsl.png)
 
-> **Entrega:** captura en [`docs/test.env/Test wsl.png`](../docs/test.env/Test%20%20wsl.png) o ejecutar `.\mvn-test.ps1` / WSL `mvn test`.
+## Evidencias Postman
 
-### Windows (error `.m2\repository`)
+| Captura | Resultado |
+|---------|-----------|
+| [Get productos.png](../docs/postman/Get%20productos.png) | GET 200 |
+| [post ventas exito.png](../docs/postman/post%20ventas%20exito.png) | POST 201 |
+| [post venta error.png](../docs/postman/post%20venta%20error.png) | POST 400 |
+| [Get producto no encontrado.png](../docs/postman/Get%20producto%20no%20encontrado.png) | GET 404 |
 
-Si aparece `Could not create local repository at C:\Users\...\.m2\repository`, tu perfil de Windows no puede crear esa carpeta. Opciones:
-
-**Opción A — WSL (recomendada):**
-
-```bash
-wsl bash -c "cd /mnt/c/Users/yilgr/OneDrive/Desktop/supermarket/lambda-ventas && mvn test"
-```
-
-**Opción B — PowerShell con repo alternativo + JDK 21:**
-
-```powershell
-cd lambda-ventas
-.\mvn-test.ps1
-```
-
-Usa `maven-settings-local.xml` (caché en `%LOCALAPPDATA%\m2\repository`) y JDK 21. Con Java 23, Mockito puede fallar al mockear DynamoDB.
-
-## Postman
-
-Importar colección o probar manualmente:
-
-1. **GET** `{BASE_URL}/api/productos` → 200, array JSON
-2. **POST** `{BASE_URL}/api/v1/ventas` → 201, `idVenta`
-3. **POST** body inválido `{}` → 400, `{ "error": "..." }`
-
-> **Entrega:** capturas en [`docs/postman/`](../docs/postman/) (ver tabla arriba).
+Más en [`docs/postman/`](../docs/postman/).
 
 ## Proceso SDD
 
-1. Se escribieron **requirements.md**, **design.md** y **tasks.md** en `.kiro/specs/lambda-ventas/` **antes** de cerrar handlers y tests.
-2. Cada endpoint y caso de prueba (PT-*, VT-*) está trazado en requirements.
-3. Los handlers implementan RF-1 a RF-3; las pruebas verifican los criterios de aceptación.
-4. El frontend consume el contrato documentado en design § Integración frontend.
+1. **requirements.md**, **design.md**, **tasks.md** en `.kiro/specs/lambda-ventas/` antes del código.
+2. Criterios PT-* y VT-* trazados a tests.
+3. RF-1 a RF-3 implementados en handlers; frontend consume contrato en `design.md`.
 
 ## Estructura
 
@@ -169,19 +133,14 @@ Importar colección o probar manualmente:
 lambda-ventas/
 ├── src/main/java/com/supermarket/lambda/
 │   ├── ProductosHandler.java
-│   ├── VentaHandler.java
+│   ├── VentaHandler.java          # valida stock + descuenta + PutItem Ventas
 │   ├── config/DynamoDbClientFactory.java
 │   └── util/ApiResponse.java
-├── src/test/java/com/supermarket/lambda/
-│   ├── ProductosHandlerTest.java
-│   └── VentaHandlerTest.java
+├── src/test/java/                   # ProductosHandlerTest, VentaHandlerTest
 ├── template.yml
 ├── samconfig.toml
-├── datos/productos.json
-└── scripts/
+├── datos/productos.json             # semilla catálogo → DynamoDB
+└── mvn-test.ps1                     # tests en Windows
 ```
 
-## Datos de ejemplo
-
-- Catálogo: `datos/productos.json` (cargado por `arrancar.sh` o `localstack-setup-api.sh`)
-- Consultar venta: `bash ../scripts/consultar-venta.sh VNT-...`
+Scripts de deploy del monorepo: [`scripts/`](../scripts/)

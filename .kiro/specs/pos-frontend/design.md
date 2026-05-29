@@ -438,6 +438,14 @@ VITE_SALES_API_URL=
 
 Adaptadores: `lambdaProductApiAdapter`, `lambdaSaleApiAdapter` (`src/adapters/http/resolvePorts.ts`).
 
+**Stock en modo Lambda:**
+
+- Catálogo con `stock_disponible` desde `GET /api/productos` (caché en `lambdaCatalogCache.ts`).
+- Validación local al agregar ítems y antes del checkout (`lambdaSaleApiAdapter.ts`).
+- Backend descuenta stock en `POST /api/v1/ventas` (ver `lambda-ventas` RF-3); respuesta **409** si no alcanza.
+- Tras venta OK: `invalidateLambdaCatalog()` recarga catálogo.
+- Precalentamiento: `lambdaWarmup.ts` reduce cold start de `ventas-post` (~15–20 s JVM).
+
 **Justificación React:** hooks (`useState`, `useEffect`) modelan carrito y búsqueda asíncrona; arquitectura hexagonal separa UI de contrato HTTP Lambda; Vite acelera desarrollo con HMR. Ver examen frontend § Frameworks permitidos.
 
 ---

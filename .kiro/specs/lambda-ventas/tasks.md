@@ -14,12 +14,12 @@ Orden de implementación (Spec-Driven Development).
 
 - [x] 3. Implementación Lambda
   - [x] 3.1 `ProductosHandler` — GET lista y GET por id
-  - [x] 3.2 `VentaHandler` — POST ventas con IVA 19%
+  - [x] 3.2 `VentaHandler` — POST ventas con IVA 19% y descuento de stock
   - [x] 3.3 `DynamoDbClientFactory` + `ApiResponse`
 
 - [x] 4. Pruebas unitarias (Mockito, DynamoDB aislado)
   - [x] 4.1 `ProductosHandlerTest` — PT-1 a PT-4
-  - [x] 4.2 `VentaHandlerTest` — VT-1 a VT-5
+  - [x] 4.2 `VentaHandlerTest` — VT-1 a VT-6 (incl. stock insuficiente → 409)
   - [x] 4.3 Constructores inyectables en handlers
 
 - [x] 5. Integración frontend

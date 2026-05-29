@@ -12,8 +12,8 @@ export function invalidateLambdaCatalog(): void {
   catalog = null
 }
 
-export async function loadLambdaCatalog(): Promise<ProductoLambda[]> {
-  if (!catalog) {
+export async function loadLambdaCatalog(force = false): Promise<ProductoLambda[]> {
+  if (force || !catalog) {
     catalog = await lambdaFetch<ProductoLambda[]>(endpoints.productos)
   }
   return catalog

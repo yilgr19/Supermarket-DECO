@@ -1,20 +1,26 @@
 #!/usr/bin/env bash
 # Uso: ./consultar-venta.sh [idVenta]
-# Ejemplo: ./consultar-venta.sh VNT-1779928886759
 set -euo pipefail
 
-EP="${AWS_ENDPOINT_URL:-http://localhost:4566}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/aws-local.sh
+source "${SCRIPT_DIR}/lib/aws-local.sh"
+# shellcheck source=lib/seed-productos.sh
+source "${SCRIPT_DIR}/lib/seed-productos.sh"
+
+init_aws_cli
+
 ID="${1:-}"
 
 if [[ -n "$ID" ]]; then
   echo "== Venta $ID =="
-  aws --endpoint-url="$EP" dynamodb get-item \
+  aws_cli dynamodb get-item \
     --table-name Ventas \
     --key "{\"idVenta\":{\"S\":\"$ID\"}}" \
-    --output json | python3 -m json.tool
+    --output json | json_pretty
 else
   echo "== Últimas ventas (scan) =="
-  aws --endpoint-url="$EP" dynamodb scan \
+  aws_cli dynamodb scan \
     --table-name Ventas \
-    --output json | python3 -m json.tool
+    --output json | json_pretty
 fi

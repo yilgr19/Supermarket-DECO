@@ -16,9 +16,11 @@ target/
 *.tsbuildinfo
 **/*.tsbuildinfo
 
-# Entornos y secretos (mantener .env.example)
+# Entornos locales (mantener .env.example)
 .env
 .env.*.local
+.env.development
+.lambda-base-url
 
 # Tests / E2E
 coverage/

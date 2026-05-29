@@ -19,7 +19,9 @@ import { useReceiptStore } from '../../infrastructure/store/receiptStore'
 import {
   loadLambdaCatalog,
   mapProductoToProduct,
+  invalidateLambdaCatalog,
 } from './lambdaCatalogCache'
+import type { ProductoLambda } from '../../core/types/lambda.types'
 
 const sales = new Map<string, Sale>()
 
@@ -96,6 +98,25 @@ async function resolveProduct(
     productId: mapped.id,
     productName: mapped.name,
     unitPrice: mapped.unitPrice,
+  }
+}
+
+function assertStockAvailable(
+  catalog: ProductoLambda[],
+  productId: string,
+  qtyInCart: number
+): void {
+  const row = catalog.find((p) => p.id === productId)
+  if (!row) {
+    throw new ApiError(404, 'Producto no encontrado / Product not found')
+  }
+  const available = Number(row.stock_disponible ?? 0)
+  if (qtyInCart > available) {
+    throw new ApiError(
+      409,
+      `Stock insuficiente para ${row.nombre} (disponible: ${available}) / Insufficient stock for ${row.nombre}`,
+      [{ productId, productName: row.nombre, available }]
+    )
   }
 }
 
@@ -187,18 +208,25 @@ export const lambdaSaleApiAdapter: SalePort = {
       throw new ApiError(422, 'Solo ventas activas admiten ítems / Only active sales accept items')
     }
     const p = await resolveProduct(productId, barcode)
+    const catalog = await loadLambdaCatalog(true)
+    const existingQty = sale.items.find((i) => i.productId === p.productId)?.quantity ?? 0
+    assertStockAvailable(catalog, p.productId, existingQty + quantity)
     return mergeLine(sale, p.productId, p.productName, p.unitPrice, quantity)
   },
 
-  updateItem(saleId, itemId, quantity) {
+  async updateItem(saleId, itemId, quantity) {
     const sale = getSaleOrThrow(saleId)
     if (quantity <= 0) {
       throw new ApiError(400, 'Cantidad debe ser mayor a 0 / Quantity must be > 0')
     }
+    const item = sale.items.find((i) => i.id === itemId)
+    if (!item) throw new ApiError(404, 'Ítem no encontrado / Item not found')
+    const catalog = await loadLambdaCatalog(true)
+    assertStockAvailable(catalog, item.productId, quantity)
     const items = sale.items.map((i) =>
       i.id === itemId ? { ...i, quantity, lineTotal: i.unitPrice * quantity } : i
     )
-    return Promise.resolve(saveSale({ ...sale, items }))
+    return saveSale({ ...sale, items })
   },
 
   removeItem(saleId, itemId) {
@@ -290,10 +318,12 @@ export const lambdaSaleApiAdapter: SalePort = {
     const res = await lambdaFetch<VentaResponseLambda>(endpoints.ventas, {
       method: 'POST',
       body: JSON.stringify(body),
+      timeoutMs: 120_000,
     })
 
     sale.status = 'COMPLETED'
     sales.set(saleId, sale)
+    invalidateLambdaCatalog()
     const receipt = ventaResponseToReceipt(sale, res, paymentType, amountReceived)
     useReceiptStore.getState().save(receipt)
     return receipt

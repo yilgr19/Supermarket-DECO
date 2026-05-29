@@ -2,12 +2,14 @@
 # Configura tablas DynamoDB + API Gateway manual en LocalStack (workaround CFN).
 set -euo pipefail
 
-EP="${AWS_ENDPOINT_URL:-http://localhost:4566}"
-REGION="${AWS_DEFAULT_REGION:-us-east-1}"
-export AWS_DEFAULT_REGION="$REGION"
-export AWS_PROFILE="${AWS_PROFILE:-localstack}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/aws-local.sh
+source "${SCRIPT_DIR}/lib/aws-local.sh"
+# shellcheck source=lib/seed-productos.sh
+source "${SCRIPT_DIR}/lib/seed-productos.sh"
 
-aws_cli() { aws --endpoint-url="$EP" "$@"; }
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+init_aws_cli
 
 echo "== Tablas DynamoDB =="
 aws_cli dynamodb create-table \
@@ -22,39 +24,10 @@ aws_cli dynamodb create-table \
   --key-schema AttributeName=id,KeyType=HASH \
   --billing-mode PAY_PER_REQUEST 2>/dev/null || true
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PRODUCTOS_JSON="${SCRIPT_DIR}/../lambda-ventas/datos/productos.json"
-if [[ ! -f "$PRODUCTOS_JSON" ]]; then
-  PRODUCTOS_JSON="${HOME}/lambda-ventas/datos/productos.json"
-fi
+PRODUCTOS_JSON="${REPO_ROOT}/lambda-ventas/datos/productos.json"
 if [[ -f "$PRODUCTOS_JSON" ]]; then
   echo "== Cargando catálogo =="
-  python3 - "$PRODUCTOS_JSON" "$EP" <<'PY'
-import json, subprocess, sys, os
-path, ep = sys.argv[1], sys.argv[2]
-with open(path, encoding="utf-8") as f:
-    data = json.load(f)
-items = data["productos"] if isinstance(data, dict) and "productos" in data else data
-for p in items:
-    item = {
-        "id": {"S": p["id"]},
-        "nombre": {"S": p["nombre"]},
-        "precio": {"N": str(p["precio"])},
-        "stock_disponible": {"N": str(p.get("stock_disponible", 100))},
-        "estado": {"S": p.get("estado", "ACTIVO")},
-    }
-    if p.get("descripcion"):
-        item["descripcion"] = {"S": p["descripcion"]}
-    if p.get("codigo_barras"):
-        item["codigo_barras"] = {"S": p["codigo_barras"]}
-    subprocess.run(
-        ["aws", "--endpoint-url", ep, "dynamodb", "put-item",
-         "--table-name", "Productos", "--item", json.dumps(item)],
-        check=True,
-        env={**os.environ, "AWS_DEFAULT_REGION": "us-east-1"},
-    )
-print(f"Productos cargados: {len(items)}")
-PY
+  seed_productos_from_json "$PRODUCTOS_JSON"
 fi
 
 echo "== API Gateway SupermarketAPI =="
@@ -113,13 +86,13 @@ fi
 
 BASE_URL="http://localhost:4566/restapis/${API_ID}/prod/_user_request_"
 echo "BASE_URL=${BASE_URL}"
-mkdir -p "$(dirname "$0")/../pos-frontend" 2>/dev/null || true
-echo "$BASE_URL" > "$(cd "$(dirname "$0")/.." && pwd)/pos-frontend/.lambda-base-url" 2>/dev/null || echo "$BASE_URL" > "${HOME}/lambda-ventas/.base_url"
+echo ""
+echo "Copia BASE_URL a pos-frontend/.env.development → VITE_API_BASE_URL"
 
 echo "== Pruebas curl =="
-curl -sf "${BASE_URL}/api/productos" | python3 -m json.tool | head -20
+curl -sf "${BASE_URL}/api/productos" | json_pretty | head -20
 echo "---"
-curl -sf "${BASE_URL}/api/productos/prod-001" | python3 -m json.tool
+curl -sf "${BASE_URL}/api/productos/prod-001" | json_pretty
 echo "---"
 curl -sf -X POST "${BASE_URL}/api/v1/ventas" -H "Content-Type: application/json" \
-  -d '{"items":[{"id":"prod-001","nombre":"Arroz 1kg","precio":4500,"cantidad":1}],"descuento":0}' | python3 -m json.tool
+  -d '{"items":[{"id":"prod-001","nombre":"Arroz 1kg","precio":4500,"cantidad":1}],"descuento":0}' | json_pretty

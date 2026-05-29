@@ -22,6 +22,7 @@ import { useSaleStore } from '../../infrastructure/store/saleStore'
 import type { Product } from '../../core/types/product.types'
 import type { DiscountType } from '../../core/types/sale.types'
 import { isLambdaBackend } from '../../adapters/http/resolvePorts'
+import { warmUpVentasLambda } from '../../infrastructure/http/lambdaWarmup'
 
 export function SalePage() {
   const navigate = useNavigate()
@@ -53,6 +54,12 @@ export function SalePage() {
       void createSale()
     }
   }, [activeSale, terminalId, createSale])
+
+  useEffect(() => {
+    if (isLambdaBackend) {
+      warmUpVentasLambda()
+    }
+  }, [])
 
   const handleAddProduct = async (product: Product) => {
     await addItemToSale(product.id, undefined, 1)

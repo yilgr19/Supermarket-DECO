@@ -4,6 +4,7 @@ target/
 dependency-reduced-pom.xml
 output.txt
 *.class
+.maven-settings-build.xml
 
 # IDE
 .idea/
