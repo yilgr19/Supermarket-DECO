@@ -4,7 +4,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { RotateCcw } from 'lucide-react'
-import { salesApiAdapter } from '../../adapters/http/salesApiAdapter'
+import { formatCop } from '../../shared/utils/formatCurrency'
+import { isLambdaBackend, LAMBDA_UNAVAILABLE_MSG, salePort } from '../../adapters/http/resolvePorts'
 import { makeSaleUseCases } from '../../core/usecases/sale.usecases'
 import { useReturn } from './useReturn'
 import { FullReturnForm } from './FullReturnForm'
@@ -18,7 +19,7 @@ import { PosPageHero } from '../../shared/components/PosPageHero'
 import type { Sale, ReturnItemRequest } from '../../core/types/sale.types'
 import { getErrorMessage } from '../../infrastructure/http/ApiError'
 
-const saleUc = makeSaleUseCases(salesApiAdapter)
+const saleUc = makeSaleUseCases(salePort)
 
 type ReturnMode = 'full' | 'partial'
 
@@ -76,6 +77,16 @@ export function ReturnPage() {
     )
   }
 
+  if (isLambdaBackend) {
+    return (
+      <div className="pos-page pos-page--medium">
+        <div className="pos-card pos-card--danger">
+          <ErrorMessage message={LAMBDA_UNAVAILABLE_MSG} />
+        </div>
+      </div>
+    )
+  }
+
   if (fetchError) {
     return (
       <div className="pos-page pos-page--medium">
@@ -93,7 +104,7 @@ export function ReturnPage() {
     )
   }
 
-  const fmt = (n: number) => `$${n.toLocaleString('es-CO')}`
+  const fmt = formatCop
 
   return (
     <div className="pos-page pos-page--medium">

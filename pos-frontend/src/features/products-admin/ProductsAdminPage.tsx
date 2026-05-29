@@ -2,12 +2,15 @@
 // EN: Product catalog administration (DeCo partial integrated into POS)
 
 import { useNavigate } from 'react-router-dom'
+import { isLambdaBackend } from '../../adapters/http/resolvePorts'
+import { LambdaCatalogReadOnly } from './LambdaCatalogReadOnly'
 import { ArrowLeft, Package, Pencil, Trash2 } from 'lucide-react'
 import { useCatalogProducts } from './useCatalogProducts'
 import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
 import { ErrorMessage } from '../../shared/components/ErrorMessage'
 import { PosAppHeader } from '../../shared/components/PosAppHeader'
 import type { CatalogProductInput } from '../../core/types/catalogProduct.types'
+import { formatCop } from '../../shared/utils/formatCurrency'
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null
@@ -126,6 +129,10 @@ function ProductFields({
 }
 
 export function ProductsAdminPage() {
+  if (isLambdaBackend) {
+    return <LambdaCatalogReadOnly />
+  }
+
   const navigate = useNavigate()
   const {
     filterDraft,
@@ -283,8 +290,8 @@ export function ProductsAdminPage() {
                     <td className="px-4 py-3 font-medium text-slate-900">{row.nombre}</td>
                     <td className="px-4 py-3 text-slate-600">{row.descripcion}</td>
                     <td className="px-4 py-3">{row.subcategoria}</td>
-                    <td className="px-4 py-3">{row.precio.toLocaleString('es-CO')}</td>
-                    <td className="px-4 py-3">{row.precioxcantidad.toLocaleString('es-CO')}</td>
+                    <td className="px-4 py-3">{formatCop(row.precio)}</td>
+                    <td className="px-4 py-3">{formatCop(row.precioxcantidad)}</td>
                     <td className="px-4 py-3">{row.availableStock}</td>
                     <td className="px-4 py-3 capitalize">{row.estado}</td>
                     <td className="px-4 py-3">

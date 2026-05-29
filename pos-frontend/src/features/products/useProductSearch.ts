@@ -2,7 +2,7 @@
 // EN: Hook for product search with debounce
 
 import { useState, useEffect, useCallback } from 'react'
-import { productApiAdapter } from '../../adapters/http/productApiAdapter'
+import { productPort } from '../../adapters/http/resolvePorts'
 import type { Product } from '../../core/types/product.types'
 import { getErrorMessage } from '../../infrastructure/http/ApiError'
 
@@ -23,7 +23,7 @@ export function useProductSearch() {
       setIsLoading(true)
       setError(null)
       try {
-        const data = await productApiAdapter.searchByName(query)
+        const data = await productPort.searchByName(query)
         setResults(data)
       } catch (err) {
         setError(getErrorMessage(err))
@@ -41,7 +41,7 @@ export function useProductSearch() {
     setIsLoading(true)
     setError(null)
     try {
-      const product = await productApiAdapter.searchByBarcode(barcode)
+      const product = await productPort.searchByBarcode(barcode)
       return product
     } catch (err) {
       setError(getErrorMessage(err))

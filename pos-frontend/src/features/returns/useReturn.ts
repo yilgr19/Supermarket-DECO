@@ -2,13 +2,13 @@
 // EN: Hook for return processing
 
 import { useState } from 'react'
-import { salesApiAdapter } from '../../adapters/http/salesApiAdapter'
+import { salePort } from '../../adapters/http/resolvePorts'
 import { makeReturnUseCases } from '../../core/usecases/return.usecases'
 import { useApiError } from '../../shared/hooks/useApiError'
 import type { ReturnItemRequest } from '../../core/types/sale.types'
 import type { Receipt } from '../../core/types/receipt.types'
 
-const returnUc = makeReturnUseCases(salesApiAdapter)
+const returnUc = makeReturnUseCases(salePort)
 
 export function useReturn() {
   const [isLoading, setIsLoading] = useState(false)

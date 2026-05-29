@@ -1,5 +1,6 @@
 // ES: Devolución parcial por líneas EN: Partial return lines
 
+import { formatCop } from '../../shared/utils/formatCurrency'
 import type { SaleItem } from '../../core/types/sale.types'
 
 export type PartialReturnLineState = {
@@ -25,7 +26,7 @@ export function PartialReturnForm({
 }: PartialReturnFormProps) {
   const hasAnyQty = lines.some((l) => l.returnQty > 0)
 
-  const fmt = (n: number) => `$${n.toLocaleString('es-CO')}`
+  const fmt = formatCop
 
   return (
     <div className="flex flex-col gap-5">

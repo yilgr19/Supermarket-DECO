@@ -2,15 +2,16 @@
 // EN: Sale totals summary
 
 import type { Sale } from '../../core/types/sale.types'
+import { formatCop } from '../../shared/utils/formatCurrency'
 
 interface TotalsSummaryProps {
   sale: Sale | null
 }
 
-const fmt = (n: number) => `$${n.toLocaleString('es-CO', { minimumFractionDigits: 0 })}`
-
 export function TotalsSummary({ sale }: TotalsSummaryProps) {
   if (!sale) return null
+
+  const fmt = formatCop
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">

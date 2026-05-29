@@ -2,13 +2,13 @@
 // EN: Checkout hook (cash and credit payment)
 
 import { useState } from 'react'
-import { salesApiAdapter } from '../../adapters/http/salesApiAdapter'
+import { salePort } from '../../adapters/http/resolvePorts'
 import { makeCheckoutUseCases } from '../../core/usecases/checkout.usecases'
 import { useSaleStore } from '../../infrastructure/store/saleStore'
 import { useApiError } from '../../shared/hooks/useApiError'
 import type { Receipt } from '../../core/types/receipt.types'
 
-const checkoutUc = makeCheckoutUseCases(salesApiAdapter)
+const checkoutUc = makeCheckoutUseCases(salePort)
 
 export function useCheckout() {
   const [isLoading, setIsLoading] = useState(false)

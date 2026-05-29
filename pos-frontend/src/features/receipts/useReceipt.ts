@@ -3,6 +3,8 @@
 
 import { useState, useEffect } from 'react'
 import axiosClient from '../../infrastructure/http/axiosClient'
+import { isLambdaBackend } from '../../config/api'
+import { useReceiptStore } from '../../infrastructure/store/receiptStore'
 import type { Receipt } from '../../core/types/receipt.types'
 import { getErrorMessage } from '../../infrastructure/http/ApiError'
 
@@ -13,6 +15,20 @@ export function useReceipt(transactionId: string | undefined) {
 
   useEffect(() => {
     if (!transactionId) return
+
+    if (isLambdaBackend) {
+      const cached = useReceiptStore.getState().get(transactionId)
+      if (cached) {
+        setReceipt(cached)
+        setError(null)
+        return
+      }
+      setError(
+        'Recibo no disponible (backend Lambda no expone historial). Inicie una nueva venta. / Receipt not available (Lambda has no receipt API). Start a new sale.'
+      )
+      return
+    }
+
     setIsLoading(true)
     setError(null)
     axiosClient

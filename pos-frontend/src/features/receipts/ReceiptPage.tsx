@@ -3,6 +3,7 @@
 
 import { useParams, useNavigate } from 'react-router-dom'
 import { Printer, ShoppingCart, RotateCcw } from 'lucide-react'
+import { isLambdaBackend } from '../../adapters/http/resolvePorts'
 import { useReceipt } from './useReceipt'
 import { ReceiptView } from './ReceiptView'
 import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
@@ -56,7 +57,7 @@ export function ReceiptPage() {
             Imprimir / Print
           </button>
 
-          {receipt.receiptType === 'SALE' && (
+          {receipt.receiptType === 'SALE' && !isLambdaBackend && (
             <button
               type="button"
               onClick={() => navigate(`/sale/${receipt.saleId}/return`)}

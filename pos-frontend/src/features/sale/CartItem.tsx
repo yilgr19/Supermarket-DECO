@@ -6,6 +6,7 @@ import { Tag, Trash2 } from 'lucide-react'
 import { DiscountForm } from './DiscountForm'
 import type { SaleItem } from '../../core/types/sale.types'
 import type { DiscountType } from '../../core/types/sale.types'
+import { formatCop } from '../../shared/utils/formatCurrency'
 
 interface CartItemProps {
   item: SaleItem
@@ -37,10 +38,10 @@ export function CartItemRow({
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1 border-l-[3px] border-slate-300 pl-3">
           <p className="truncate text-sm font-semibold text-slate-900">{item.productName}</p>
-          <p className="text-xs text-slate-500">${item.unitPrice.toLocaleString('es-CO')} · unidad</p>
+          <p className="text-xs text-slate-500">{formatCop(item.unitPrice)} · unidad</p>
           {hasDiscount && (
             <p className="mt-1 text-xs font-medium text-indigo-700">
-              Descuento −${(item.discount ?? 0).toLocaleString('es-CO')}
+              Descuento −{formatCop(item.discount ?? 0)}
             </p>
           )}
         </div>
@@ -62,11 +63,11 @@ export function CartItemRow({
           <div className="w-[5.75rem] text-right">
             {hasDiscount && (
               <p className="text-xs text-slate-400 line-through tabular-nums">
-                ${gross.toLocaleString('es-CO')}
+                {formatCop(gross)}
               </p>
             )}
             <p className="text-sm font-bold tabular-nums text-slate-900">
-              ${item.lineTotal.toLocaleString('es-CO')}
+              {formatCop(item.lineTotal)}
             </p>
           </div>
 

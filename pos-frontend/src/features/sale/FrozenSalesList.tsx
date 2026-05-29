@@ -1,10 +1,15 @@
 // ES: Lista de ventas congeladas por terminal
 // EN: List of frozen sales by terminal
 
+import { formatCop } from '../../shared/utils/formatCurrency'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Snowflake, Play, AlertTriangle } from 'lucide-react'
-import { salesApiAdapter } from '../../adapters/http/salesApiAdapter'
+import {
+  isLambdaBackend,
+  LAMBDA_UNAVAILABLE_MSG,
+  salePort,
+} from '../../adapters/http/resolvePorts'
 import { makeSaleUseCases } from '../../core/usecases/sale.usecases'
 import { useSale } from './useSale'
 import { useSessionStore } from '../../infrastructure/store/sessionStore'
@@ -14,7 +19,7 @@ import { PosPageHero } from '../../shared/components/PosPageHero'
 import type { Sale } from '../../core/types/sale.types'
 import { getErrorMessage } from '../../infrastructure/http/ApiError'
 
-const saleUc = makeSaleUseCases(salesApiAdapter)
+const saleUc = makeSaleUseCases(salePort)
 
 function sortFrozenByDateAsc(list: Sale[]): Sale[] {
   return [...list].sort((a, b) => {
@@ -29,11 +34,11 @@ export function FrozenSalesList() {
   const { terminalId } = useSessionStore()
   const { resumeSale, isLoading } = useSale()
   const [frozenSales, setFrozenSales] = useState<Sale[]>([])
-  const [fetchLoading, setFetchLoading] = useState(true)
+  const [fetchLoading, setFetchLoading] = useState(() => !isLambdaBackend)
   const [fetchError, setFetchError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!terminalId) return
+    if (!terminalId || isLambdaBackend) return
     setFetchLoading(true)
     saleUc
       .listFrozen(terminalId)
@@ -41,6 +46,16 @@ export function FrozenSalesList() {
       .catch((err) => setFetchError(getErrorMessage(err)))
       .finally(() => setFetchLoading(false))
   }, [terminalId])
+
+  if (isLambdaBackend) {
+    return (
+      <div className="pos-page pos-page--medium">
+        <div className="pos-card pos-card--danger">
+          <ErrorMessage message={LAMBDA_UNAVAILABLE_MSG} />
+        </div>
+      </div>
+    )
+  }
 
   const handleResume = async (saleId: string) => {
     await resumeSale(saleId)
@@ -101,8 +116,7 @@ export function FrozenSalesList() {
                     <p className="mt-1 text-sm text-slate-600">
                       {sale.items.length} ítem ·{' '}
                       <span className="pos-accent-text">
-                        $
-                        {sale.total.toLocaleString('es-CO')}
+                        {formatCop(sale.total)}
                       </span>
                     </p>
                     {sale.frozenAt && (

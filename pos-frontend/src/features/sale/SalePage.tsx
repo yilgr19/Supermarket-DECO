@@ -21,6 +21,7 @@ import { useSessionStore } from '../../infrastructure/store/sessionStore'
 import { useSaleStore } from '../../infrastructure/store/saleStore'
 import type { Product } from '../../core/types/product.types'
 import type { DiscountType } from '../../core/types/sale.types'
+import { isLambdaBackend } from '../../adapters/http/resolvePorts'
 
 export function SalePage() {
   const navigate = useNavigate()
@@ -168,17 +169,19 @@ export function SalePage() {
             >
               <Package className="h-5 w-5" />
             </button>
-            <button
-              onClick={() => navigate('/sale/frozen')}
-              className="pos-header-frozen-btn"
-              aria-label="Ver ventas congeladas / View frozen sales"
-              title="Ver ventas congeladas / View frozen sales"
-              type="button"
-            >
-              <Snowflake className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span className="pos-header-frozen-btn__label">Congeladas</span>
-              <span className="pos-header-frozen-btn__hint">Frozen</span>
-            </button>
+            {!isLambdaBackend && (
+              <button
+                onClick={() => navigate('/sale/frozen')}
+                className="pos-header-frozen-btn"
+                aria-label="Ver ventas congeladas / View frozen sales"
+                title="Ver ventas congeladas / View frozen sales"
+                type="button"
+              >
+                <Snowflake className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span className="pos-header-frozen-btn__label">Congeladas</span>
+                <span className="pos-header-frozen-btn__hint">Frozen</span>
+              </button>
+            )}
             <button
               onClick={handleLogout}
               className="pos-btn-quiet"
@@ -279,7 +282,7 @@ export function SalePage() {
             <TotalsSummary sale={activeSale} />
 
             <div className="flex flex-wrap gap-3">
-              {isActive && (
+              {isActive && !isLambdaBackend && (
                 <button
                   onClick={handleFreeze}
                   disabled={isLoading}

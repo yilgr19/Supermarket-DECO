@@ -419,11 +419,26 @@ interface SaleState {
 
 ## 11. Variables de Entorno / Environment Variables
 
+### Modo Spring Boot (Sales API)
+
 ```env
-VITE_SALES_API_URL=http://localhost:8080
+VITE_SALES_API_URL=
+VITE_USE_MSW=true
 VITE_TERMINAL_ID=TERM-001
 VITE_STORE_NAME=Supermercado POS
 ```
+
+### Modo Lambda (API Gateway + LocalStack)
+
+```env
+VITE_API_BASE_URL=http://localhost:4566/restapis/<API_ID>/prod/_user_request_
+VITE_USE_MSW=false
+VITE_SALES_API_URL=
+```
+
+Adaptadores: `lambdaProductApiAdapter`, `lambdaSaleApiAdapter` (`src/adapters/http/resolvePorts.ts`).
+
+**Justificación React:** hooks (`useState`, `useEffect`) modelan carrito y búsqueda asíncrona; arquitectura hexagonal separa UI de contrato HTTP Lambda; Vite acelera desarrollo con HMR. Ver examen frontend § Frameworks permitidos.
 
 ---
 

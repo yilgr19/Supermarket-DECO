@@ -318,5 +318,21 @@
 2. **ES:** CUANDO la sesión expira o el cajero cierra sesión, LA UI DEBERÁ redirigir al login y limpiar el estado local.
    **EN:** WHEN the session expires or the cashier logs out, THE UI SHALL redirect to login and clear local state.
 
+---
+
+### Requisito 15: Integración Lambda / API Gateway (modo examen)
+
+**Historia de Usuario (ES):** Como cajero, quiero usar el POS contra el backend serverless (Lambda + API Gateway) desplegado con SAM.
+
+#### Criterios de Aceptación
+
+1. **ES:** CUANDO `VITE_API_BASE_URL` está configurada, LA UI DEBERÁ consumir `GET /api/productos` para búsqueda y catálogo (sin MSW).
+2. **ES:** CUANDO el cajero completa checkout en efectivo, LA UI DEBERÁ enviar `POST /api/v1/ventas` con `{ items, descuento }` y mostrar recibo con totales del servidor (idVenta, iva, total).
+3. **ES:** SI el API retorna error (`{ "error": "..." }`), LA UI DEBERÁ mostrar mensaje claro al cajero.
+4. **ES:** LA URL base del API DEBERÁ leerse de `VITE_API_BASE_URL` (archivo `.env`), no hardcodeada en componentes.
+5. **ES:** Funciones sin endpoint Lambda (congelar, devoluciones, CRUD catálogo) DEBERÁN ocultarse o mostrar mensaje de no disponible.
+
+**Referencia backend:** `.kiro/specs/lambda-ventas/requirements.md`
+
 3. **ES:** LAS rutas de la aplicación DEBERÁN estar protegidas y redirigir al login si no hay sesión activa.
    **EN:** THE application routes SHALL be protected and redirect to login if there is no active session.

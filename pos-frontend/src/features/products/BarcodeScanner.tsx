@@ -5,7 +5,7 @@ import { useState, useRef, useEffect, type KeyboardEvent } from 'react'
 import { Camera, CameraOff, Hash } from 'lucide-react'
 import { ErrorMessage } from '../../shared/components/ErrorMessage'
 import type { Product } from '../../core/types/product.types'
-import { productApiAdapter } from '../../adapters/http/productApiAdapter'
+import { productPort } from '../../adapters/http/resolvePorts'
 import { getErrorMessage } from '../../infrastructure/http/ApiError'
 
 interface BarcodeScannerProps {
@@ -25,7 +25,7 @@ export function BarcodeScanner({ onProductFound }: BarcodeScannerProps) {
     setIsSearching(true)
     setError(null)
     try {
-      const product = await productApiAdapter.searchByBarcode(barcode.trim())
+      const product = await productPort.searchByBarcode(barcode.trim())
       onProductFound(product)
       setManualBarcode('')
     } catch (err) {

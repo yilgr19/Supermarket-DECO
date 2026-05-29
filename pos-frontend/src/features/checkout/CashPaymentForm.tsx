@@ -1,4 +1,4 @@
-// ES: Entrada de pago efectivo en checkout EN: Cash payment amount in checkout
+import { formatCop } from '../../shared/utils/formatCurrency'
 
 interface CashPaymentFormProps {
   total: number
@@ -11,7 +11,7 @@ export function CashPaymentForm({
   total,
   amountReceived,
   onAmountReceivedChange,
-  fmt = (n) => `$${n.toLocaleString('es-CO')}`,
+  fmt = formatCop,
 }: CashPaymentFormProps) {
   const received = parseFloat(amountReceived) || 0
   const change = Math.max(0, received - total)

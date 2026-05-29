@@ -2,15 +2,15 @@
 // EN: Checkout use cases wrapping SalePort.checkout
 
 import type { SalePort } from '../ports/SalePort'
+import { formatCop } from '../../shared/utils/formatCurrency'
 
 export function makeCheckoutUseCases(port: SalePort) {
   return {
     checkoutCash: (saleId: string, saleTotal: number, amountReceived: number) => {
       if (amountReceived < saleTotal) {
+        const min = formatCop(saleTotal)
         throw new Error(
-          `El monto recibido es menor al total (mínimo $${saleTotal.toLocaleString(
-            'es-CO'
-          )}) / Received amount below sale total (minimum $${saleTotal.toLocaleString('es-CO')})`
+          `El monto recibido es menor al total (mínimo ${min}) / Received amount below sale total (minimum ${min})`
         )
       }
       return port.checkout(saleId, 'CASH', amountReceived)

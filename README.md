@@ -6,10 +6,11 @@ Monorepo del **punto de venta** para supermercado: cliente web en React y **Sale
 
 | Ruta | Contenido |
 |------|-----------|
+| **`lambda-ventas/`** | Backend serverless: Java 17, SAM, API Gateway, Lambdas, DynamoDB. Ver [lambda-ventas/README.md](lambda-ventas/README.md). |
 | **`pos-frontend/`** | Cliente POS: React 18, TypeScript, Vite, Tailwind, Vitest. Pantallas de venta, catálogo, login de cajero, recibos y devoluciones. |
 | **`pos-sales-api/`** | API REST Spring Boot (ventas, catálogo, health). Puerto por defecto **8088** en desarrollo. |
-| **`docs/`** | Taller, SDD y capturas de interfaz (`docs/screenshots/`). |
-| **`.kiro/specs/`** | Especificaciones generadas con Kiro. |
+| **`docs/`** | Taller, SDD, [infraestructura LocalStack](docs/INFRAESTRUCTURA-LOCALSTACK.md) y capturas (`docs/screenshots/`). |
+| **`.kiro/specs/`** | Especificaciones SDD: `lambda-ventas/`, `pos-frontend/`, `pos-sales-platform/`. |
 | **`start-dev.cmd` / `start-dev.ps1`** | Arranque conjunto API + frontend (prepara `.env`, libera puerto y ejecuta `npm run dev` en la raíz). |
 
 En desarrollo, el front usa el proxy de Vite (`/api` → `127.0.0.1:8088`) con `VITE_SALES_API_URL` vacío. **MSW** solo aplica si `VITE_USE_MSW` no es `false`; el script de arranque lo desactiva para trabajar contra la API real.
@@ -173,3 +174,56 @@ Listado por terminal con fecha, ítems, total y **Reanudar**; enlace **Volver a 
 Ticket con terminal, cajero, líneas, subtotal, IVA, descuento, total, pago en efectivo, vuelto e identificador de transacción.
 
 **Incluir en el commit:** desde la raíz del repo, `git add docs/screenshots/*.png` junto con este `README.md`.
+
+---
+
+## Proceso SDD (Spec-Driven Development)
+
+Este proyecto sigue SDD: **primero specs, luego código**.
+
+| Spec | Ubicación | Implementación |
+|------|-----------|----------------|
+| Backend Lambda | [`.kiro/specs/lambda-ventas/`](.kiro/specs/lambda-ventas/) | `lambda-ventas/` — handlers, SAM, `mvn test` |
+| Frontend POS | [`.kiro/specs/pos-frontend/`](.kiro/specs/pos-frontend/) | `pos-frontend/` — React + adapters Lambda |
+| Sales API (Spring) | [`.kiro/specs/pos-sales-platform/`](.kiro/specs/pos-sales-platform/) | `pos-sales-api/` |
+
+Flujo de trabajo:
+
+1. **requirements.md** — qué debe hacer cada endpoint/vista (criterios de aceptación).
+2. **design.md** — arquitectura, tablas DynamoDB, contratos HTTP, variables de entorno.
+3. **tasks.md** — tareas ordenadas; se marcan `[x]` al completar.
+4. Código y pruebas deben ser **trazables** a los IDs de criterio (PT-*, VT-* en Lambda; requisitos 1–15 en frontend).
+
+### Modo Lambda (evaluación docente)
+
+1. WSL: levantar LocalStack + Lambdas (`lambda-ventas/scripts/arrancar.sh` o `scripts/localstack-setup-api.sh`).
+2. Copiar `BASE_URL` a `pos-frontend/.env.development` → `VITE_API_BASE_URL`.
+3. Windows: `cd pos-frontend && npm run dev`.
+4. Flujo demo: login → buscar producto → carrito → checkout efectivo → recibo.
+5. Verificar venta en DynamoDB: `bash scripts/consultar-venta.sh VNT-...`
+
+Documentación detallada: [lambda-ventas/README.md](lambda-ventas/README.md), [docs/INFRAESTRUCTURA-LOCALSTACK.md](docs/INFRAESTRUCTURA-LOCALSTACK.md).
+
+---
+
+## Evidencias de entrega (exámenes)
+
+### Backend — Postman y pruebas (`docs/postman/`, `docs/test.env/`)
+
+| Evidencia | Carpeta |
+|-----------|---------|
+| GET productos, GET por id, POST venta 201, errores 404/400 | [`docs/postman/`](docs/postman/) |
+| `mvn test` BUILD SUCCESS, consulta DynamoDB, `.env.development` | [`docs/test.env/`](docs/test.env/) |
+
+Detalle con enlaces: [lambda-ventas/README.md § Evidencias](lambda-ventas/README.md#evidencias-de-entrega).
+
+### Frontend — UI (`docs/screenshots/`)
+
+| Captura | Flujo |
+|---------|-------|
+| [login.png](docs/screenshots/login.png) | Inicio de sesión |
+| [buscarp.png](docs/screenshots/buscarp.png) | Productos desde API |
+| [factura.png](docs/screenshots/factura.png) | Venta exitosa + `idVenta` |
+| [error-api-caido.png](docs/screenshots/error-api-caido.png) | Error cuando el API no responde |
+
+Regenerar captura de error: `cd pos-frontend && npm run capture:error-screenshot`.

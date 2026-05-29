@@ -5,6 +5,7 @@ import { Search, Plus } from 'lucide-react'
 import { useProductSearch } from './useProductSearch'
 import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
 import { ErrorMessage } from '../../shared/components/ErrorMessage'
+import { formatCop } from '../../shared/utils/formatCurrency'
 import type { Product } from '../../core/types/product.types'
 
 interface ProductSearchProps {
@@ -58,7 +59,7 @@ export function ProductSearch({ onAddProduct }: ProductSearchProps) {
                   {product.barcode} · <span className="text-slate-600">{product.category}</span>
                 </p>
                 <p className="mt-0.5 text-sm font-bold text-slate-900">
-                  ${product.unitPrice.toLocaleString('es-CO')}
+                  {formatCop(product.unitPrice)}
                   <span className="ml-2 text-xs font-medium text-slate-400">
                     Stock {product.availableStock}
                   </span>

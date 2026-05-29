@@ -10,6 +10,8 @@ import { CreditPaymentForm } from './CreditPaymentForm'
 import { ErrorMessage } from '../../shared/components/ErrorMessage'
 import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
 import type { Customer } from '../../core/types/customer.types'
+import { isLambdaBackend } from '../../adapters/http/resolvePorts'
+import { formatCop } from '../../shared/utils/formatCurrency'
 
 interface CheckoutModalProps {
   isOpen: boolean
@@ -30,7 +32,7 @@ export function CheckoutModal({ isOpen, onClose, selectedCustomer }: CheckoutMod
 
   const total = activeSale.total
   const received = parseFloat(amountReceived) || 0
-  const fmt = (n: number) => `$${n.toLocaleString('es-CO')}`
+  const fmt = formatCop
 
   const handleCash = async () => {
     const receipt = await checkoutCash(received)
@@ -74,40 +76,46 @@ export function CheckoutModal({ isOpen, onClose, selectedCustomer }: CheckoutMod
           </button>
         </div>
 
-        <div className="mt-6 flex rounded-2xl border border-slate-200 bg-slate-100/70 p-1">
-          <button
-            type="button"
-            onClick={() => {
-              setTab('CASH')
-              clearError()
-            }}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition ${
-              tab === 'CASH'
-                ? 'bg-white text-indigo-700 shadow-md shadow-slate-200/50'
-                : 'text-slate-500 hover:text-slate-800'
-            }`}
-            aria-pressed={tab === 'CASH'}
-          >
-            <Banknote className="h-4 w-4" />
-            Efectivo
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setTab('CREDIT')
-              clearError()
-            }}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition ${
-              tab === 'CREDIT'
-                ? 'bg-white text-indigo-700 shadow-md shadow-slate-200/50'
-                : 'text-slate-500 hover:text-slate-800'
-            }`}
-            aria-pressed={tab === 'CREDIT'}
-          >
-            <CreditCard className="h-4 w-4" />
-            Crédito
-          </button>
-        </div>
+        {!isLambdaBackend ? (
+          <div className="mt-6 flex rounded-2xl border border-slate-200 bg-slate-100/70 p-1">
+            <button
+              type="button"
+              onClick={() => {
+                setTab('CASH')
+                clearError()
+              }}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition ${
+                tab === 'CASH'
+                  ? 'bg-white text-indigo-700 shadow-md shadow-slate-200/50'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+              aria-pressed={tab === 'CASH'}
+            >
+              <Banknote className="h-4 w-4" />
+              Efectivo
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setTab('CREDIT')
+                clearError()
+              }}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition ${
+                tab === 'CREDIT'
+                  ? 'bg-white text-indigo-700 shadow-md shadow-slate-200/50'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+              aria-pressed={tab === 'CREDIT'}
+            >
+              <CreditCard className="h-4 w-4" />
+              Crédito
+            </button>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-slate-500">
+            Backend Lambda: solo pago en efectivo / Lambda backend: cash payment only
+          </p>
+        )}
 
         <div className="mt-6">
           {tab === 'CASH' && (

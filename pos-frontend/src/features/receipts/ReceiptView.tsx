@@ -2,14 +2,14 @@
 // EN: Sale or return receipt view
 
 import type { Receipt } from '../../core/types/receipt.types'
+import { formatCop } from '../../shared/utils/formatCurrency'
 
 interface ReceiptViewProps {
   receipt: Receipt
 }
 
-const fmt = (n: number) => `$${n.toLocaleString('es-CO', { minimumFractionDigits: 0 })}`
-
 export function ReceiptView({ receipt }: ReceiptViewProps) {
+  const fmt = formatCop
   const isReturn = receipt.receiptType !== 'SALE'
   const isCreditMemo = isReturn && receipt.paymentType === 'CREDIT'
   const storeName = import.meta.env.VITE_STORE_NAME || 'Supermercado POS'

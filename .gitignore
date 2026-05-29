@@ -10,6 +10,7 @@ dist/
 # Build Java (Maven)
 target/
 **/target/
+.m2-home/
 
 # TypeScript incremental
 *.tsbuildinfo

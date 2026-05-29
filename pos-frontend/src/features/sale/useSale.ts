@@ -2,14 +2,14 @@
 // EN: Main hook for active sale management
 
 import { useState, useCallback } from 'react'
-import { salesApiAdapter } from '../../adapters/http/salesApiAdapter'
+import { salePort } from '../../adapters/http/resolvePorts'
 import { makeSaleUseCases } from '../../core/usecases/sale.usecases'
 import { useSaleStore } from '../../infrastructure/store/saleStore'
 import { useSessionStore } from '../../infrastructure/store/sessionStore'
 import { useApiError } from '../../shared/hooks/useApiError'
 import type { DiscountType } from '../../core/types/sale.types'
 
-const saleUc = makeSaleUseCases(salesApiAdapter)
+const saleUc = makeSaleUseCases(salePort)
 
 export function useSale() {
   const [isLoading, setIsLoading] = useState(false)

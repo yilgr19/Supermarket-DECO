@@ -1,0 +1,31 @@
+{
+  "productos": [
+    {
+      "id": "prod-001",
+      "nombre": "Arroz 1kg",
+      "descripcion": "Granos",
+      "precio": 4500,
+      "stock_disponible": 100,
+      "estado": "activo",
+      "codigo_barras": "770123456"
+    },
+    {
+      "id": "prod-002",
+      "nombre": "Leche entera 1L",
+      "descripcion": "Lácteos",
+      "precio": 5200,
+      "stock_disponible": 50,
+      "estado": "activo",
+      "codigo_barras": "770111222333"
+    },
+    {
+      "id": "prod-003",
+      "nombre": "Pan integral",
+      "descripcion": "Panadería",
+      "precio": 6800,
+      "stock_disponible": 30,
+      "estado": "activo",
+      "codigo_barras": "770444555666"
+    }
+  ]
+}

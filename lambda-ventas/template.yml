@@ -1,0 +1,148 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Supermarket API - Lambdas Java 17 (ventas POST, productos GET) + DynamoDB + API Gateway
+
+Parameters:
+  Stage:
+    Type: String
+    Default: prod
+    Description: Stage del API Gateway
+  DynamoDbEndpoint:
+    Type: String
+    Default: ''
+    Description: >-
+      Dejar vacío en AWS real. Para LocalStack:
+      http://localhost.localstack.cloud:4566
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: java17
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        TABLA_VENTAS: Ventas
+        TABLA_PRODUCTOS: Productos
+        DYNAMODB_ENDPOINT: !Ref DynamoDbEndpoint
+        AWS_JAVA_V1_DISABLE_DEPRECATION_ANNOUNCEMENT: 'true'
+
+Resources:
+  VentasTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Ventas
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: idVenta
+          AttributeType: S
+      KeySchema:
+        - AttributeName: idVenta
+          KeyType: HASH
+
+  ProductosTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Productos
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  SupermarketApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: SupermarketAPI
+      StageName: !Ref Stage
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+
+  VentasFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: ventas-post
+      Description: Registra ventas (POST) - Java 17
+      Handler: com.supermarket.lambda.VentaHandler::handleRequest
+      CodeUri: .
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Sid: DynamoDBVentasSolo
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:GetItem
+                - dynamodb:Query
+                - dynamodb:Scan
+                - dynamodb:DescribeTable
+              Resource:
+                - !GetAtt VentasTable.Arn
+                - !Sub '${VentasTable.Arn}/index/*'
+      Events:
+        PostVentas:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SupermarketApi
+            Path: /api/v1/ventas
+            Method: post
+
+  ProductosFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: productos-get
+      Description: Consulta productos (GET) - Java 17
+      Handler: com.supermarket.lambda.ProductosHandler::handleRequest
+      CodeUri: .
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Sid: DynamoDBProductosSoloLectura
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Query
+                - dynamodb:Scan
+                - dynamodb:DescribeTable
+              Resource:
+                - !GetAtt ProductosTable.Arn
+                - !Sub '${ProductosTable.Arn}/index/*'
+      Events:
+        GetProductos:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SupermarketApi
+            Path: /api/productos
+            Method: get
+        GetProductoById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SupermarketApi
+            Path: /api/productos/{id}
+            Method: get
+
+Outputs:
+  ApiId:
+    Description: ID del API Gateway (usar en URL LocalStack)
+    Value: !Ref SupermarketApi
+  ApiUrl:
+    Description: URL base en AWS
+    Value: !Sub 'https://${SupermarketApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}'
+  ApiUrlLocalStack:
+    Description: URL base en LocalStack
+    Value: !Sub 'http://localhost:4566/restapis/${SupermarketApi}/${Stage}/_user_request_'
+  VentasEndpoint:
+    Description: POST ventas
+    Value: !Sub '/api/v1/ventas'
+  ProductosEndpoint:
+    Description: GET productos
+    Value: !Sub '/api/productos'

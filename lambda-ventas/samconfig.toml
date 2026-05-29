@@ -1,0 +1,47 @@
+# Configuración SAM - ver: sam build | sam deploy | sam local
+
+version = 0.1
+
+[default.global.parameters]
+stack_name = "supermarket-api"
+
+[default.build.parameters]
+template_file = "template.yml"
+cached = true
+parallel = true
+
+[default.validate.parameters]
+lint = true
+
+[default.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+resolve_s3 = false
+region = "us-east-1"
+parameter_overrides = "Stage=prod"
+
+[localstack.global.parameters]
+stack_name = "supermarket-api"
+
+[localstack.build.parameters]
+template_file = "template.yml"
+cached = true
+parallel = true
+
+[localstack.deploy.parameters]
+template_file = "template.yml"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+resolve_s3 = false
+s3_bucket = "sam-deploy-bucket"
+region = "us-east-1"
+profile = "localstack"
+parameter_overrides = "Stage=prod DynamoDbEndpoint=http://localhost.localstack.cloud:4566"
+
+[localstack.local_start_api.parameters]
+profile = "localstack"
+env_vars = "env.json"
+
+[localstack.local_invoke.parameters]
+profile = "localstack"
+env_vars = "env.json"

@@ -1,0 +1,8 @@
+{
+  "httpMethod": "POST",
+  "path": "/api/v1/ventas",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"items\": [{\"id\": \"PROD-LECHE\", \"nombre\": \"Leche 1L\", \"precio\": 3200, \"cantidad\": 2}, {\"id\": \"PROD-PAN\", \"nombre\": \"Pan Tajado\", \"precio\": 4500, \"cantidad\": 1}], \"descuento\": 0}"
+}

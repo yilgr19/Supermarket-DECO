@@ -1,0 +1,11 @@
+# SAM / Maven
+.aws-sam/
+target/
+dependency-reduced-pom.xml
+output.txt
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
