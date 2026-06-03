@@ -37,8 +37,10 @@ npm run dev
 
 | Método | Ruta | Uso en UI |
 |--------|------|-----------|
-| GET | `/api/productos` | Búsqueda y catálogo (caché en memoria) |
-| GET | `/api/productos/{id}` | Detalle por código de barras |
+| GET | `/api/productos?q=...` | Búsqueda por nombre (solo coincidencias) |
+| GET | `/api/productos?codigo_barras=...` | Un producto por barcode |
+| GET | `/api/productos/{id}` | Un producto al agregar al carrito |
+| GET | `/api/productos?all=true` | Catálogo completo (solo admin) |
 | POST | `/api/v1/ventas` | Checkout efectivo (`{ items, descuento }`) |
 
 Tras checkout exitoso: recibo con `idVenta`, IVA y total del servidor. El catálogo se recarga para reflejar stock actualizado (**F5** si no ves cambios).

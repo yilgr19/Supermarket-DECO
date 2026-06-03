@@ -120,6 +120,37 @@ class ProductosHandlerTest {
     }
 
     @Test
+    void buscarPorNombre_retornaSoloCoincidencias() throws Exception {
+        Item arroz = new Item()
+                .withPrimaryKey("id", "prod-001")
+                .withString("nombre", "Arroz 1kg")
+                .withNumber("precio", 4500);
+        Item pan = new Item()
+                .withPrimaryKey("id", "prod-003")
+                .withString("nombre", "Pan integral")
+                .withNumber("precio", 6800);
+
+        @SuppressWarnings("unchecked")
+        ItemCollection<ScanOutcome> collection = mock(ItemCollection.class);
+        @SuppressWarnings("unchecked")
+        IteratorSupport<Item, ScanOutcome> iterator = mock(IteratorSupport.class);
+        when(table.scan()).thenReturn(collection);
+        when(collection.iterator()).thenReturn(iterator);
+        when(iterator.hasNext()).thenReturn(true, true, false);
+        when(iterator.next()).thenReturn(arroz, pan);
+
+        APIGatewayProxyRequestEvent request = new APIGatewayProxyRequestEvent()
+                .withHttpMethod("GET")
+                .withQueryStringParameters(Map.of("q", "pan"));
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(request, LambdaTestSupport.mockContext());
+
+        assertEquals(200, response.getStatusCode());
+        assertTrue(response.getBody().contains("Pan integral"));
+        assertTrue(!response.getBody().contains("prod-001"));
+    }
+
+    @Test
     void listarProductos_errorConexion_retorna500() {
         when(table.scan()).thenThrow(new AmazonServiceException("Connection refused"));
 

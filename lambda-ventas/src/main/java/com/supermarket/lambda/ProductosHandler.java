@@ -55,6 +55,21 @@ public class ProductosHandler implements RequestHandler<APIGatewayProxyRequestEv
                 return obtenerPorId(id, context);
             }
 
+            Map<String, String> queryParams = request.getQueryStringParameters();
+            if (queryParams != null) {
+                String q = queryParams.get("q");
+                if (q != null && !q.isBlank()) {
+                    return buscarPorNombre(q.trim(), context);
+                }
+                String codigoBarras = queryParams.get("codigo_barras");
+                if (codigoBarras != null && !codigoBarras.isBlank()) {
+                    return buscarPorCodigoBarras(codigoBarras.trim(), context);
+                }
+                if ("true".equalsIgnoreCase(queryParams.get("all"))) {
+                    return listarTodos(context);
+                }
+            }
+
             return listarTodos(context);
         } catch (Exception e) {
             context.getLogger().log("ERROR ProductosHandler: " + e.getMessage());
@@ -72,6 +87,54 @@ public class ProductosHandler implements RequestHandler<APIGatewayProxyRequestEv
 
         context.getLogger().log("Producto obtenido: " + id);
         return ApiResponse.json(200, item.toJSONPretty());
+    }
+
+    /** GET /api/productos?q=... — solo coincidencias por nombre (no catálogo completo). */
+    private APIGatewayProxyResponseEvent buscarPorNombre(String q, Context context) throws Exception {
+        if (q.length() < 2) {
+            return ApiResponse.error(400, "La búsqueda requiere al menos 2 caracteres");
+        }
+        String qLower = q.toLowerCase();
+        Table table = dynamoDB.getTable(TABLA_PRODUCTOS);
+        ItemCollection<ScanOutcome> items = table.scan();
+
+        ArrayNode productos = MAPPER.createArrayNode();
+        Iterator<Item> iterator = items.iterator();
+        while (iterator.hasNext()) {
+            Item item = iterator.next();
+            String nombre = item.getString("nombre");
+            if (nombre != null && nombre.toLowerCase().contains(qLower)) {
+                ObjectNode producto = (ObjectNode) MAPPER.readTree(item.toJSONPretty());
+                productos.add(producto);
+            }
+        }
+
+        context.getLogger().log("Productos encontrados q=" + q + ": " + productos.size());
+        return ApiResponse.json(200, productos.toString());
+    }
+
+    /** GET /api/productos?codigo_barras=... — un solo producto. */
+    private APIGatewayProxyResponseEvent buscarPorCodigoBarras(String code, Context context) throws Exception {
+        Table table = dynamoDB.getTable(TABLA_PRODUCTOS);
+
+        Item byId = table.getItem("id", code);
+        if (byId != null) {
+            context.getLogger().log("Producto por id/código: " + code);
+            return ApiResponse.json(200, byId.toJSONPretty());
+        }
+
+        ItemCollection<ScanOutcome> items = table.scan();
+        Iterator<Item> iterator = items.iterator();
+        while (iterator.hasNext()) {
+            Item item = iterator.next();
+            String barcode = item.getString("codigo_barras");
+            if (code.equals(barcode)) {
+                context.getLogger().log("Producto por codigo_barras: " + code);
+                return ApiResponse.json(200, item.toJSONPretty());
+            }
+        }
+
+        return ApiResponse.error(404, "Producto no encontrado");
     }
 
     private APIGatewayProxyResponseEvent listarTodos(Context context) throws Exception {

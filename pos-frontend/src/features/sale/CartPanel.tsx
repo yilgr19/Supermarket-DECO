@@ -47,7 +47,7 @@ export function CartPanel({
         </div>
         <p className="text-sm font-medium text-slate-600">Carrito vacío / Empty cart</p>
         <p className="mt-1 max-w-[240px] text-xs text-slate-400">
-          Busca productos o usa el código de barras / Search or scan barcode
+          Usa la búsqueda debajo del carrito / Use the search below the cart
         </p>
       </div>
     )

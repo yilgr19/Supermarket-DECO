@@ -1,14 +1,14 @@
 // ES: Pantalla principal de venta POS
 // EN: Main POS sale screen
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Snowflake, XCircle, ShoppingBag, LogOut, Package, Search, UserSearch, UserCheck } from 'lucide-react'
 import { useSale } from './useSale'
 import { CartPanel } from './CartPanel'
 import { TotalsSummary } from './TotalsSummary'
 import { CancelDialog } from './CancelDialog'
-import { ProductSearchModal } from '../products/ProductSearchModal'
+import { CartProductSearch } from './CartProductSearch'
 import { CustomerSearchModal } from '../customers/CustomerSearchModal'
 import { CheckoutModal } from '../checkout/CheckoutModal'
 import { SaleKeyboardShortcutsHelp } from './SaleKeyboardShortcutsHelp'
@@ -45,9 +45,9 @@ export function SalePage() {
 
   const [showCancelDialog, setShowCancelDialog] = useState(false)
   const [showCheckout, setShowCheckout] = useState(false)
-  const [showProductSearch, setShowProductSearch] = useState(false)
   const [showCustomerSearch, setShowCustomerSearch] = useState(false)
   const [discountErrorItemId, setDiscountErrorItemId] = useState<string | null>(null)
+  const productSearchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!activeSale && terminalId) {
@@ -97,8 +97,12 @@ export function SalePage() {
   const isActive = activeSale?.status === 'ACTIVE'
   const isFrozenOrActive =
     activeSale?.status === 'ACTIVE' || activeSale?.status === 'FROZEN'
-  const modalOpen =
-    showCheckout || showCancelDialog || showProductSearch || showCustomerSearch
+  const modalOpen = showCheckout || showCancelDialog || showCustomerSearch
+
+  const focusProductSearch = useCallback(() => {
+    productSearchInputRef.current?.focus()
+    productSearchInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [])
 
   const closeModals = useCallback(() => {
     if (showCheckout) {
@@ -109,14 +113,10 @@ export function SalePage() {
       setShowCancelDialog(false)
       return
     }
-    if (showProductSearch) {
-      setShowProductSearch(false)
-      return
-    }
     if (showCustomerSearch) {
       setShowCustomerSearch(false)
     }
-  }, [showCancelDialog, showCheckout, showCustomerSearch, showProductSearch])
+  }, [showCancelDialog, showCheckout, showCustomerSearch])
 
   const shortcutAvailability = useMemo(
     () => ({
@@ -134,7 +134,7 @@ export function SalePage() {
 
   const shortcutHandlers = useMemo(
     () => ({
-      onProductSearch: () => setShowProductSearch(true),
+      onProductSearch: focusProductSearch,
       onCustomerSearch: () => setShowCustomerSearch(true),
       onCheckout: () => setShowCheckout(true),
       onFreeze: () => {
@@ -146,7 +146,7 @@ export function SalePage() {
       onLogout: handleLogout,
       onCloseModals: closeModals,
     }),
-    [closeModals, handleFreeze, handleLogout, navigate]
+    [closeModals, focusProductSearch, handleFreeze, handleLogout, navigate]
   )
 
   useSaleKeyboardShortcuts(shortcutHandlers, shortcutAvailability, modalOpen)
@@ -205,7 +205,7 @@ export function SalePage() {
         <div className="pos-action-bar">
           <button
             type="button"
-            onClick={() => setShowProductSearch(true)}
+            onClick={focusProductSearch}
             disabled={!isActive || isLoading}
             className="pos-action-btn"
           >
@@ -259,14 +259,18 @@ export function SalePage() {
             </div>
           )}
 
-          {error && !isLoading && (
+          {error.message && !isLoading && !activeSale && (
             <ErrorMessage
-              message={error.message ?? ''}
+              message={error.message}
               onRetry={() => {
                 clearError()
                 void createSale()
               }}
             />
+          )}
+
+          {error.message && !isLoading && activeSale && !error.outOfStockItems && (
+            <ErrorMessage message={error.message} onRetry={clearError} />
           )}
 
           <div className="min-h-0 flex-1 overflow-y-auto">
@@ -282,6 +286,13 @@ export function SalePage() {
               onRemoveItemDiscount={handleRemoveItemDiscount}
             />
           </div>
+
+          <CartProductSearch
+            searchInputRef={productSearchInputRef}
+            disabled={!isActive || isLoading}
+            onAddProduct={handleAddProduct}
+            onBarcodeProduct={handleBarcodeProduct}
+          />
         </section>
 
         {activeSale && (
@@ -327,13 +338,6 @@ export function SalePage() {
           </>
         )}
       </main>
-
-      <ProductSearchModal
-        isOpen={showProductSearch}
-        onClose={() => setShowProductSearch(false)}
-        onAddProduct={handleAddProduct}
-        onBarcodeProduct={handleBarcodeProduct}
-      />
 
       <CustomerSearchModal
         isOpen={showCustomerSearch}

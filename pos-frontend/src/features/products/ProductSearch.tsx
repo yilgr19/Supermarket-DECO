@@ -2,6 +2,7 @@
 // EN: Product search component by name
 
 import { Search, Plus } from 'lucide-react'
+import type { RefObject } from 'react'
 import { useProductSearch } from './useProductSearch'
 import { LoadingSpinner } from '../../shared/components/LoadingSpinner'
 import { ErrorMessage } from '../../shared/components/ErrorMessage'
@@ -10,9 +11,12 @@ import type { Product } from '../../core/types/product.types'
 
 interface ProductSearchProps {
   onAddProduct: (product: Product) => void
+  searchInputRef?: RefObject<HTMLInputElement | null>
+  /** Limita altura de resultados (búsqueda inline en carrito). */
+  compact?: boolean
 }
 
-export function ProductSearch({ onAddProduct }: ProductSearchProps) {
+export function ProductSearch({ onAddProduct, searchInputRef, compact = false }: ProductSearchProps) {
   const { query, setQuery, results, isLoading, error } = useProductSearch()
 
   return (
@@ -23,6 +27,7 @@ export function ProductSearch({ onAddProduct }: ProductSearchProps) {
           aria-hidden="true"
         />
         <input
+          ref={searchInputRef}
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -47,7 +52,7 @@ export function ProductSearch({ onAddProduct }: ProductSearchProps) {
       )}
 
       {results.length > 0 && (
-        <ul className="pos-list">
+        <ul className={`pos-list ${compact ? 'max-h-40' : 'max-h-64'}`}>
           {results.map((product) => (
             <li
               key={product.id}

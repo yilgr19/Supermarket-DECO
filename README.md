@@ -30,70 +30,22 @@ API Gateway SupermarketAPI (LocalStack :4566)
               DynamoDB Ventas      (registro de ventas)
 ```
 
-- **Infraestructura:** se levanta con **scripts** (manual).
-- **Ventas y stock:** se procesan **automáticamente** en cada POST a `/api/v1/ventas`.
+| Qué | Cómo se activa |
+|-----|----------------|
+| **LocalStack + Lambdas** | Scripts bash (manual) |
+| **Ventas y descuento de stock** | Automático en cada `POST /api/v1/ventas` |
+| **Frontend** | `npm run dev` (manual) |
 
 ---
 
-## Inicio rápido
+## Guía paso a paso — LocalStack, Lambda y verificación
 
-Desde la raíz del repo. **Git Bash** para scripts; **PowerShell** para el frontend.
+Sigue estos pasos **en orden** cada vez que reinicies el PC o Docker. Usa **Git Bash** (o WSL) para los scripts; **PowerShell** para el frontend.
 
-```bash
-# 1. LocalStack activo
-curl -s http://localhost:4566/_localstack/health
+### Paso 0 — Requisitos previos (solo primera vez)
 
-export AWS_PROFILE=localstack AWS_DEFAULT_REGION=us-east-1 AWS_ENDPOINT_URL=http://localhost:4566
-
-# 2. Compilar y desplegar Lambdas
-bash scripts/build-and-deploy-lambdas.sh
-
-# 3. Tablas, catálogo y API Gateway (copiar BASE_URL al .env)
-bash scripts/localstack-setup-api.sh
-```
-
-```powershell
-# 4. Frontend (editar pos-frontend/.env.development con BASE_URL)
-cd pos-frontend
-npm run dev
-# → http://localhost:5173/login
-```
-
-> En **Git Bash** sin AWS CLI instalado, los scripts usan `wsl aws` automáticamente.
-
----
-
-## Requisitos
-
-### Modo Lambda + LocalStack (recomendado — examen)
-
-| Herramienta | Uso |
-|-------------|-----|
-| **Docker** | LocalStack en puerto **4566** |
-| **Git Bash** o **WSL** | Scripts de deploy y verificación |
-| **AWS CLI** (WSL o Windows) | DynamoDB, Lambdas, API Gateway |
-| **JDK 17+** + **Maven 3.9+** | Compilar Lambdas |
-| **Node.js 18+** | Frontend y seed de catálogo |
-| **AWS SAM CLI** | Opcional (`mvn package` si no está instalado) |
-
-### Modo Spring Boot (opcional — taller)
-
-| Herramienta | Uso |
-|-------------|-----|
-| **JDK 17** + **Maven** | `pos-sales-api` |
-| **Node.js 18+** | Frontend con proxy Vite → `:8088` |
-
----
-
-## Instalación (primera vez)
-
-```powershell
-npm install
-npm install --legacy-peer-deps --prefix pos-frontend
-Copy-Item pos-frontend\.env.example pos-frontend\.env.development
-```
-
-Perfil AWS para LocalStack (`~/.aws/credentials`):
+1. **Docker** corriendo (en muchos equipos se levanta desde **Ubuntu/WSL** si en Windows directo falla).
+2. **Perfil AWS** en `~/.aws/credentials`:
 
 ```ini
 [localstack]
@@ -101,45 +53,117 @@ aws_access_key_id = test
 aws_secret_access_key = test
 ```
 
+3. Dependencias del monorepo:
+
+```powershell
+npm install
+npm install --legacy-peer-deps --prefix pos-frontend
+Copy-Item pos-frontend\.env.example pos-frontend\.env.development
+```
+
 ---
 
-## Cómo correr el proyecto (Lambda + LocalStack)
+### Paso 1 — Activar LocalStack (simulador AWS)
 
-### 1. Variables de entorno
+LocalStack debe escuchar en el puerto **4566**.
+
+**Git Bash / WSL:**
 
 ```bash
+curl -s http://localhost:4566/_localstack/health
+```
+
+**PowerShell:**
+
+```powershell
+curl.exe -s http://localhost:4566/_localstack/health
+```
+
+**Resultado esperado:** JSON con `"lambda": "running"` y `"dynamodb": "running"`.
+
+Si no responde → levanta Docker/LocalStack desde Ubuntu/WSL y vuelve a probar.
+
+> En PowerShell **no** uses `export ...` (eso es de Linux). Usa `$env:...` (ver paso 2).
+
+---
+
+### Paso 2 — Variables de entorno AWS (sesión actual)
+
+**Git Bash / WSL** (raíz del repo `supermarket/`):
+
+```bash
+cd ~/OneDrive/Desktop/supermarket
+
 export AWS_PROFILE=localstack
 export AWS_DEFAULT_REGION=us-east-1
 export AWS_ENDPOINT_URL=http://localhost:4566
 ```
 
-### 2. Compilar y desplegar Lambdas
+**PowerShell** (solo para pruebas con `curl.exe`; los scripts de deploy van mejor en Git Bash):
+
+```powershell
+cd C:\Users\yilgr\OneDrive\Desktop\supermarket
+
+$env:AWS_PROFILE="localstack"
+$env:AWS_DEFAULT_REGION="us-east-1"
+$env:AWS_ENDPOINT_URL="http://localhost:4566"
+```
+
+---
+
+### Paso 3 — Compilar y desplegar las Lambdas
+
+Sube el JAR Java a LocalStack como funciones `productos-get` y `ventas-post`.
 
 ```bash
 bash scripts/build-and-deploy-lambdas.sh
 ```
 
-Solo desplegar (JAR ya compilado):
+**Resultado esperado:**
+
+```text
+== Compilando lambda-ventas ==
+== Desplegando Lambdas ==
+Actualizando productos-get...
+Actualizando ventas-post...
+Lambdas listas.
+```
+
+Si solo cambiaste código y el JAR ya está compilado:
 
 ```bash
 bash scripts/localstack-deploy-lambdas.sh
 ```
 
-### 3. Tablas, catálogo y API Gateway
+> Sin AWS CLI en Git Bash, el script usa `wsl aws` automáticamente.
+
+---
+
+### Paso 4 — Crear tablas, cargar productos y configurar API Gateway
+
+Crea tablas DynamoDB (`Productos`, `Ventas`), carga el catálogo desde `lambda-ventas/datos/productos.json` y deja listo API Gateway.
 
 ```bash
 bash scripts/localstack-setup-api.sh
 ```
 
-Al final imprime:
+**Resultado esperado:**
 
 ```text
-BASE_URL=http://localhost:4566/restapis/<API_ID>/prod/_user_request_
+== Tablas DynamoDB ==
+== Cargando catálogo ==
+Productos cargados: 4
+== API Gateway SupermarketAPI ==
+BASE_URL=http://localhost:4566/restapis/XXXXXXXX/prod/_user_request_
 ```
 
-### 4. Configurar frontend
+**Importante:** copia el `BASE_URL` completo. El `XXXXXXXX` es el **API ID**; **cambia cada vez que reinicias LocalStack**.
 
-`pos-frontend/.env.development`:
+---
+
+### Paso 5 — Configurar el frontend
+
+Edita `pos-frontend/.env.development`:
 
 ```env
 VITE_API_BASE_URL=http://localhost:4566/restapis/TU_API_ID/prod/_user_request_
@@ -149,37 +173,63 @@ VITE_TERMINAL_ID=TERM-001
 VITE_STORE_NAME=Supermercado POS
 ```
 
-### 5. Iniciar frontend
+Sustituye `TU_API_ID` por el valor del paso 4 (ej. `dif7o56qm3`).
+
+Inicia el frontend (**PowerShell**):
 
 ```powershell
 cd pos-frontend
 npm run dev
 ```
 
-### 6. Flujo de prueba
+Abre **http://localhost:5173/login**
 
-1. Login (`CAJERO-01` / `TERM-001`).
-2. Buscar producto (mín. 2 caracteres) → `GET /api/productos`.
-3. Agregar al carrito → **Checkout efectivo**.
-4. Recibo con `idVenta` (`VNT-...`). Primera venta puede tardar ~15–20 s (cold start JVM).
+> Si cambias `.env.development`, **detén y vuelve a ejecutar** `npm run dev` (Vite no recarga la URL sola).
 
 ---
 
-## Verificación operativa
+### Paso 6 — Verificar que los productos están en DynamoDB
 
-### Confirmar ventas en DynamoDB
+**Opción A — API (recomendada):**
 
-Tras el checkout, copia el `idVenta` del recibo.
+**Git Bash:**
 
 ```bash
-# Una venta
-bash scripts/consultar-venta.sh VNT-1780078872579
-
-# Todas las ventas
-bash scripts/consultar-venta.sh
+curl -s "http://localhost:4566/restapis/TU_API_ID/prod/_user_request_/api/productos"
 ```
 
-**Probar POST manual:**
+**PowerShell:**
+
+```powershell
+curl.exe -s "http://localhost:4566/restapis/TU_API_ID/prod/_user_request_/api/productos"
+```
+
+**Resultado esperado:** JSON con array de productos (`prod-001`, `prod-002`, …).
+
+**Opción B — Un producto por ID:**
+
+```bash
+curl -s "http://localhost:4566/restapis/TU_API_ID/prod/_user_request_/api/productos/prod-001"
+```
+
+Debe incluir `nombre`, `precio`, `stock_disponible`.
+
+**Opción C — UI:** login → buscar `pan` o `arroz` (mín. 2 letras) → debe listar productos.
+
+**Si ves "Sin conexión" en el POS:** casi siempre el `VITE_API_BASE_URL` tiene un **API ID viejo**. Repite pasos 4 y 5.
+
+---
+
+### Paso 7 — Verificar que las ventas se guardan en DynamoDB
+
+**Opción A — Desde el POS:**
+
+1. Agrega productos al carrito.
+2. **Checkout efectivo**.
+3. Copia el `idVenta` del recibo (ej. `VNT-1780078872579`).
+4. Primera venta puede tardar **15–20 s** (cold start JVM).
+
+**Opción B — POST manual (Git Bash):**
 
 ```bash
 curl -s -X POST "http://localhost:4566/restapis/TU_API_ID/prod/_user_request_/api/v1/ventas" \
@@ -187,53 +237,109 @@ curl -s -X POST "http://localhost:4566/restapis/TU_API_ID/prod/_user_request_/ap
   -d '{"items":[{"id":"prod-001","nombre":"Arroz 1kg","precio":4500,"cantidad":1}],"descuento":0}'
 ```
 
-Respuesta esperada: **201** con `idVenta`, `subtotal`, `iva`, `total`.
+**Resultado esperado:** HTTP **201** y JSON con `idVenta`, `subtotal`, `iva`, `total`.
 
-**Verificar descuento de stock:**
+**Opción C — Consultar DynamoDB (Git Bash, raíz del repo):**
+
+```bash
+# Una venta por ID del recibo
+bash scripts/consultar-venta.sh VNT-1780078872579
+
+# Todas las ventas registradas
+bash scripts/consultar-venta.sh
+```
+
+Debes ver el ítem, totales y fecha en la tabla **Ventas**.
+
+**Verificar descuento de stock** (opcional):
 
 ```bash
 curl -s "http://localhost:4566/restapis/TU_API_ID/prod/_user_request_/api/productos/prod-001"
 ```
 
-| Qué revisar | Cómo |
-|-------------|------|
-| Venta persistida | `consultar-venta.sh VNT-...` |
-| Totales / IVA | Recibo o JSON del script |
-| Stock actualizado | `GET /api/productos/{id}` + **F5** en el POS |
+El `stock_disponible` debe haber bajado respecto al valor anterior. En el POS, pulsa **F5** para refrescar el catálogo.
 
-### Recargar catálogo tras editar `productos.json`
+---
 
-[`lambda-ventas/datos/productos.json`](lambda-ventas/datos/productos.json) es **semilla**: la Lambda lee **DynamoDB**, no el archivo en tiempo real.
+### Paso 8 — Recargar catálogo si editas `productos.json`
+
+El archivo [`lambda-ventas/datos/productos.json`](lambda-ventas/datos/productos.json) **no se lee en vivo**. Hay que volver a cargarlo en DynamoDB:
 
 ```bash
 bash scripts/seed-catalog.sh
 ```
 
-Deberías ver `Productos cargados: N`. Luego **F5** en el navegador.
+**Resultado esperado:** `Productos cargados: N` (N = cantidad de ítems en el JSON).
 
-Setup completo (reinicio de LocalStack):
+Luego **F5** en el navegador.
+
+---
+
+## Checklist rápido (arranque del día)
+
+| # | Acción | Comando | ¿OK? |
+|---|--------|---------|------|
+| 1 | LocalStack activo | `curl` health `:4566` | JSON con lambda + dynamodb running |
+| 2 | Variables AWS | `export` o `$env:` | Perfil `localstack` |
+| 3 | Deploy Lambdas | `bash scripts/build-and-deploy-lambdas.sh` | `Lambdas listas` |
+| 4 | Tablas + API + catálogo | `bash scripts/localstack-setup-api.sh` | `Productos cargados: N` + `BASE_URL` |
+| 5 | `.env` + frontend | Copiar `BASE_URL` → `npm run dev` | Login carga |
+| 6 | Productos OK | `GET /api/productos` | Array JSON |
+| 7 | Venta OK | Checkout o `consultar-venta.sh VNT-...` | Venta en DynamoDB |
+
+---
+
+## Git Bash vs PowerShell
+
+| Tarea | Terminal recomendada |
+|-------|----------------------|
+| Scripts deploy / seed / consultar ventas | **Git Bash** o **WSL** |
+| `npm run dev` (frontend) | **PowerShell** |
+| Health check LocalStack | Ambas (`curl` / `curl.exe`) |
+
+**Git Bash / WSL:**
 
 ```bash
-bash scripts/localstack-setup-api.sh
+export AWS_PROFILE=localstack
+export AWS_DEFAULT_REGION=us-east-1
+export AWS_ENDPOINT_URL=http://localhost:4566
+curl -s http://localhost:4566/_localstack/health
 ```
 
-Verificar producto nuevo:
+**PowerShell:**
 
-```bash
-curl -s "http://localhost:4566/restapis/TU_API_ID/prod/_user_request_/api/productos/prod-004"
+```powershell
+$env:AWS_PROFILE="localstack"
+$env:AWS_DEFAULT_REGION="us-east-1"
+$env:AWS_ENDPOINT_URL="http://localhost:4566"
+curl.exe -s http://localhost:4566/_localstack/health
 ```
 
-> El seed hace `put-item` (inserta/actualiza por `id`). No borra productos eliminados del JSON.
+> En PowerShell, `curl` es alias de `Invoke-WebRequest`. Usa **`curl.exe`** para evitar errores.
 
-### Scripts de referencia
+---
+
+## Problemas frecuentes
+
+| Síntoma | Causa probable | Solución |
+|---------|----------------|----------|
+| **Sin conexión** en búsqueda de productos | `VITE_API_BASE_URL` con API ID viejo | Paso 4 → copiar nuevo `BASE_URL` → reiniciar `npm run dev` |
+| `aws: command not found` en Git Bash | AWS CLI solo en WSL | Los scripts usan `wsl aws`; o ejecuta desde WSL |
+| Producto nuevo en JSON no aparece | No se recargó DynamoDB | `bash scripts/seed-catalog.sh` + F5 |
+| Primera venta muy lenta | Cold start JVM | Normal (~15–20 s); las siguientes van más rápido |
+| `export` falla en PowerShell | Comando de bash | Usa `$env:NOMBRE="valor"` |
+
+---
+
+## Scripts de referencia
 
 | Script | Cuándo usarlo |
 |--------|----------------|
-| [`build-and-deploy-lambdas.sh`](scripts/build-and-deploy-lambdas.sh) | Tras cambiar código Java |
-| [`localstack-deploy-lambdas.sh`](scripts/localstack-deploy-lambdas.sh) | Solo subir JAR a LocalStack |
-| [`localstack-setup-api.sh`](scripts/localstack-setup-api.sh) | Tablas + API Gateway + catálogo inicial |
+| [`build-and-deploy-lambdas.sh`](scripts/build-and-deploy-lambdas.sh) | Compilar + desplegar Lambdas |
+| [`localstack-deploy-lambdas.sh`](scripts/localstack-deploy-lambdas.sh) | Solo subir JAR (sin compilar) |
+| [`localstack-setup-api.sh`](scripts/localstack-setup-api.sh) | Tablas + catálogo + API Gateway |
 | [`seed-catalog.sh`](scripts/seed-catalog.sh) | Tras editar `productos.json` |
-| [`consultar-venta.sh`](scripts/consultar-venta.sh) | Verificar ventas en DynamoDB |
+| [`consultar-venta.sh`](scripts/consultar-venta.sh) | Ver ventas en DynamoDB |
 
 ---
 
@@ -241,23 +347,33 @@ curl -s "http://localhost:4566/restapis/TU_API_ID/prod/_user_request_/api/produc
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| GET | `/api/productos` | Listar catálogo |
+| GET | `/api/productos` | Listar catálogo (DynamoDB `Productos`) |
 | GET | `/api/productos/{id}` | Detalle producto |
-| POST | `/api/v1/ventas` | Registrar venta; descuenta stock (`{ items, descuento }`) |
+| POST | `/api/v1/ventas` | Registrar venta en DynamoDB `Ventas`; descuenta stock |
 
-Errores relevantes: **400** body inválido · **409** stock insuficiente · **404** producto no encontrado.
+Errores: **400** body inválido · **409** stock insuficiente · **404** producto no encontrado.
+
+---
+
+## Requisitos
+
+| Herramienta | Uso |
+|-------------|-----|
+| **Docker** + LocalStack | Puerto **4566** |
+| **Git Bash** o **WSL** | Scripts bash |
+| **AWS CLI** | WSL o vía `wsl aws` |
+| **JDK 17+** + **Maven** | Compilar Lambdas |
+| **Node.js 18+** | Frontend y seed catálogo |
 
 ---
 
 ## Pruebas unitarias backend
 
 ```bash
-# WSL (recomendado)
 cd lambda-ventas && mvn test
-
-# Windows PowerShell (si falla .m2)
-cd lambda-ventas && .\mvn-test.ps1
 ```
+
+Windows si falla `.m2`: `cd lambda-ventas && .\mvn-test.ps1`
 
 11 tests (5 productos + 6 ventas, incluye stock 409).
 
@@ -265,36 +381,20 @@ cd lambda-ventas && .\mvn-test.ps1
 
 ## Modos alternativos
 
-### Spring Boot + frontend
+**Spring Boot:** `.\start-dev.cmd` — dejar `VITE_API_BASE_URL` vacío.
 
-```powershell
-.\start-dev.cmd
-```
-
-API en **http://127.0.0.1:8088**. Dejar **`VITE_API_BASE_URL` vacío** en `.env.development`.
-
-### Mocks (sin backend)
-
-```powershell
-cd pos-frontend
-# VITE_API_BASE_URL vacío, VITE_USE_MSW=true
-npm run dev
-```
+**Mocks:** `VITE_USE_MSW=true` y `VITE_API_BASE_URL` vacío.
 
 ---
 
 ## Proceso SDD
 
-| Spec | Ubicación | Código |
-|------|-----------|--------|
-| Backend Lambda | [`.kiro/specs/lambda-ventas/`](.kiro/specs/lambda-ventas/) | `lambda-ventas/` |
-| Frontend POS | [`.kiro/specs/pos-frontend/`](.kiro/specs/pos-frontend/) | `pos-frontend/` |
+| Spec | Ubicación |
+|------|-----------|
+| Backend Lambda | [`.kiro/specs/lambda-ventas/`](.kiro/specs/lambda-ventas/) |
+| Frontend POS | [`.kiro/specs/pos-frontend/`](.kiro/specs/pos-frontend/) |
 
-1. **requirements.md** — criterios de aceptación (PT-*, VT-*).
-2. **design.md** — arquitectura y contratos HTTP.
-3. **tasks.md** — tareas de implementación.
-
-Documentación adicional: [lambda-ventas/README.md](lambda-ventas/README.md) · [INFRAESTRUCTURA-LOCALSTACK.md](docs/INFRAESTRUCTURA-LOCALSTACK.md) · [Guía de estudio](docs/GUIA-ESTUDIO-TECNICO.md)
+Más documentación: [lambda-ventas/README.md](lambda-ventas/README.md) · [INFRAESTRUCTURA-LOCALSTACK.md](docs/INFRAESTRUCTURA-LOCALSTACK.md) · [Guía de estudio](docs/GUIA-ESTUDIO-TECNICO.md)
 
 ---
 
@@ -302,10 +402,8 @@ Documentación adicional: [lambda-ventas/README.md](lambda-ventas/README.md) · 
 
 | Tipo | Carpeta |
 |------|---------|
-| Postman (GET, POST, errores) | [`docs/postman/`](docs/postman/) |
-| `mvn test`, DynamoDB, `.env` | [`docs/test.env/`](docs/test.env/) |
+| Postman | [`docs/postman/`](docs/postman/) |
+| Tests / DynamoDB / `.env` | [`docs/test.env/`](docs/test.env/) |
 | UI del POS | [`docs/screenshots/`](docs/screenshots/) |
 
 ![Vista principal del POS](docs/screenshots/cap1.png)
-
-Regenerar captura error API: `cd pos-frontend && npm run capture:error-screenshot`

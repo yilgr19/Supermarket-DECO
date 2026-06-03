@@ -17,7 +17,8 @@ import { ApiError } from '../../infrastructure/http/ApiError'
 import { useSessionStore } from '../../infrastructure/store/sessionStore'
 import { useReceiptStore } from '../../infrastructure/store/receiptStore'
 import {
-  loadLambdaCatalog,
+  fetchLambdaProductById,
+  fetchLambdaProductByBarcode,
   mapProductoToProduct,
   invalidateLambdaCatalog,
 } from './lambdaCatalogCache'
@@ -82,40 +83,45 @@ function saveSale(sale: Sale): Sale {
   return next
 }
 
-async function resolveProduct(
+async function fetchProductRow(
   productId?: string,
   barcode?: string
-): Promise<{ productId: string; productName: string; unitPrice: number }> {
-  const catalog = await loadLambdaCatalog()
-  const match =
-    (productId && catalog.find((p) => p.id === productId)) ||
-    (barcode && catalog.find((p) => p.codigo_barras === barcode || p.id === barcode))
-  if (!match) {
-    throw new ApiError(404, 'Producto no encontrado / Product not found')
+): Promise<ProductoLambda> {
+  if (productId) {
+    return fetchLambdaProductById(productId)
   }
-  const mapped = mapProductoToProduct(match)
+  if (barcode) {
+    return fetchLambdaProductByBarcode(barcode)
+  }
+  throw new ApiError(404, 'Producto no encontrado / Product not found')
+}
+
+function toResolvedProduct(row: ProductoLambda): {
+  productId: string
+  productName: string
+  unitPrice: number
+  availableStock: number
+} {
+  const mapped = mapProductoToProduct(row)
   return {
     productId: mapped.id,
     productName: mapped.name,
     unitPrice: mapped.unitPrice,
+    availableStock: Number(row.stock_disponible ?? 0),
   }
 }
 
 function assertStockAvailable(
-  catalog: ProductoLambda[],
   productId: string,
+  productName: string,
+  available: number,
   qtyInCart: number
 ): void {
-  const row = catalog.find((p) => p.id === productId)
-  if (!row) {
-    throw new ApiError(404, 'Producto no encontrado / Product not found')
-  }
-  const available = Number(row.stock_disponible ?? 0)
   if (qtyInCart > available) {
     throw new ApiError(
       409,
-      `Stock insuficiente para ${row.nombre} (disponible: ${available}) / Insufficient stock for ${row.nombre}`,
-      [{ productId, productName: row.nombre, available }]
+      `Stock insuficiente para ${productName} (disponible: ${available}) / Insufficient stock for ${productName}`,
+      [{ productId, productName, available }]
     )
   }
 }
@@ -207,10 +213,9 @@ export const lambdaSaleApiAdapter: SalePort = {
     if (sale.status !== 'ACTIVE') {
       throw new ApiError(422, 'Solo ventas activas admiten ítems / Only active sales accept items')
     }
-    const p = await resolveProduct(productId, barcode)
-    const catalog = await loadLambdaCatalog(true)
+    const p = toResolvedProduct(await fetchProductRow(productId, barcode))
     const existingQty = sale.items.find((i) => i.productId === p.productId)?.quantity ?? 0
-    assertStockAvailable(catalog, p.productId, existingQty + quantity)
+    assertStockAvailable(p.productId, p.productName, p.availableStock, existingQty + quantity)
     return mergeLine(sale, p.productId, p.productName, p.unitPrice, quantity)
   },
 
@@ -221,8 +226,13 @@ export const lambdaSaleApiAdapter: SalePort = {
     }
     const item = sale.items.find((i) => i.id === itemId)
     if (!item) throw new ApiError(404, 'Ítem no encontrado / Item not found')
-    const catalog = await loadLambdaCatalog(true)
-    assertStockAvailable(catalog, item.productId, quantity)
+    const row = await fetchLambdaProductById(item.productId)
+    assertStockAvailable(
+      item.productId,
+      item.productName,
+      Number(row.stock_disponible ?? 0),
+      quantity
+    )
     const items = sale.items.map((i) =>
       i.id === itemId ? { ...i, quantity, lineTotal: i.unitPrice * quantity } : i
     )

@@ -58,11 +58,13 @@ cd "$LAMBDA_DIR"
 setup_maven
 maybe_java_home
 
+# Siempre compilar el JAR en target/ (localstack-deploy-lambdas.sh lo usa directamente).
+mvn -s "$MAVEN_SETTINGS" -q clean package -DskipTests
+
 if command -v sam >/dev/null 2>&1; then
   sam build --template-file template.yml
 else
-  echo "SAM no encontrado; usando mvn package..."
-  mvn -s "$MAVEN_SETTINGS" -q clean package -DskipTests
+  echo "SAM no encontrado; despliegue usa target/lambda-ventas-1.0-SNAPSHOT.jar"
 fi
 
 echo "== Desplegando Lambdas =="
